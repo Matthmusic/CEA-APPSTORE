@@ -1,0 +1,113 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-dark-border;
+  }
+
+  body {
+    @apply bg-dark-bg text-white antialiased;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+      sans-serif;
+  }
+
+  /* Custom Scrollbar - Orange Theme */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-dark-card;
+    border-radius: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-primary;
+    border-radius: 10px;
+    transition: background-color 0.2s;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-primary-dark;
+  }
+
+  /* Hide default scrollbar for Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #FF751F #1a1a1a;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary hover:bg-primary-dark text-black font-semibold py-2 px-4 rounded-lg transition-all duration-200 active:scale-95;
+  }
+
+  .btn-secondary {
+    @apply bg-dark-card hover:bg-dark-border text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 active:scale-95;
+  }
+
+  .card {
+    @apply bg-dark-card border border-dark-border rounded-xl p-4 transition-all duration-200;
+  }
+
+  .card-hover {
+    @apply hover:border-primary hover:shadow-lg hover:shadow-primary/20;
+  }
+
+  .launch-button {
+    position: relative;
+    height: 36px;
+    perspective: 900px;
+    border-radius: 12px;
+    border: 1px solid rgba(34, 197, 94, 0.35);
+    background: transparent;
+    padding: 0;
+    overflow: hidden;
+    display: inline-flex;
+    align-items: stretch;
+    justify-content: stretch;
+  }
+
+  .launch-cube {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: block;
+    transform-style: preserve-3d;
+    transition: transform 0.35s ease;
+  }
+
+  .launch-face {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    backface-visibility: hidden;
+    transform-style: preserve-3d;
+    font-weight: 600;
+    font-size: 0.875rem;
+  }
+
+  .launch-front {
+    transform: translateZ(18px);
+    background: rgba(34, 197, 94, 0.12);
+    color: #4ade80;
+  }
+
+  .launch-back {
+    transform: rotateX(90deg) translateZ(18px);
+    background: linear-gradient(135deg, #FF751F 0%, #FF8F4D 100%);
+    color: #0a0a0a;
+  }
+
+  .launch-button:hover .launch-cube {
+    transform: rotateX(-90deg);
+  }
+}

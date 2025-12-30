@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "version": "1.0.0",
+  "app": {
+    "id": "unique-app-id",
+    "name": "Nom de l'Application",
+    "version": "1.0.0",
+    "description": {
+      "short": "Description courte de l'application (max 100 caractères)",
+      "long": "Description détaillée de l'application avec toutes les fonctionnalités et informations importantes pour l'utilisateur."
+    }
+  },
+  "resources": {
+    "logo": {
+      "path": "assets/logo.png",
+      "url": "https://raw.githubusercontent.com/username/repo/main/assets/logo.png"
+    },
+    "icon": {
+      "path": "assets/icon.ico",
+      "url": "https://raw.githubusercontent.com/username/repo/main/assets/icon.ico"
+    },
+    "screenshots": [
+      {
+        "path": "assets/screenshots/screenshot1.png",
+        "url": "https://raw.githubusercontent.com/username/repo/main/assets/screenshots/screenshot1.png",
+        "caption": "Description de la capture d'écran"
+      }
+    ]
+  },
+  "detection": {
+    "windows": {
+      "files": [
+        {
+          "path": "C:\\Program Files\\MonApp\\app.exe",
+          "description": "Fichier exécutable principal"
+        }
+      ],
+      "directories": [
+        {
+          "path": "%APPDATA%\\MonApp",
+          "description": "Dossier de configuration"
+        }
+      ],
+      "registry": [
+        {
+          "key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\MonApp",
+          "value": "InstallPath",
+          "description": "Clé de registre d'installation (optionnel)"
+        }
+      ]
+    },
+    "priority": "files"
+  },
+  "metadata": {
+    "author": {
+      "name": "Nom de l'auteur",
+      "email": "email@example.com",
+      "url": "https://github.com/username"
+    },
+    "category": "development",
+    "tags": [
+      "productivity",
+      "tools",
+      "development"
+    ],
+    "repository": {
+      "type": "github",
+      "url": "https://github.com/username/repo",
+      "branch": "main"
+    },
+    "homepage": "https://monapp.example.com",
+    "documentation": "https://docs.monapp.example.com",
+    "license": "MIT",
+    "compatibility": {
+      "os": ["windows"],
+      "minVersion": "Windows 10"
+    }
+  },
+  "installation": {
+    "type": "installer",
+    "downloadUrl": "https://github.com/username/repo/releases/latest/download/setup.exe",
+    "installCommand": "setup.exe /SILENT",
+    "uninstallCommand": "uninstall.exe /SILENT"
+  },
+  "changelog": {
+    "1.0.0": {
+      "date": "2025-12-30",
+      "changes": [
+        "Initial release",
+        "Feature 1",
+        "Feature 2"
+      ]
+    }
+  }
+}

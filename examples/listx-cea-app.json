@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "version": "1.0.0",
+  "app": {
+    "id": "listx",
+    "name": "ListX",
+    "version": "1.0.0",
+    "description": {
+      "short": "Génération et gestion de listings de documents techniques",
+      "long": "ListX est une application professionnelle de génération et gestion de listings de documents techniques. Elle permet de créer rapidement des inventaires de fichiers avec exports PDF et Excel, parfaite pour la documentation de projets industriels et techniques."
+    }
+  },
+  "resources": {
+    "logo": {
+      "path": "build/icon.png",
+      "url": "https://raw.githubusercontent.com/Matthmusic/ListX/main/build/icon.png"
+    },
+    "icon": {
+      "path": "build/icon.ico",
+      "url": "https://raw.githubusercontent.com/Matthmusic/ListX/main/build/icon.ico"
+    }
+  },
+  "detection": {
+    "windows": {
+      "files": [
+        {
+          "path": "C:\\Program Files\\ListX\\ListX.exe",
+          "description": "Installation standard 64-bit"
+        },
+        {
+          "path": "C:\\Program Files (x86)\\ListX\\ListX.exe",
+          "description": "Installation 32-bit"
+        }
+      ],
+      "directories": [
+        {
+          "path": "%APPDATA%\\ListX",
+          "description": "Dossier de données utilisateur"
+        }
+      ],
+      "registry": [
+        {
+          "key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\ListX",
+          "description": "Clé d'installation système"
+        },
+        {
+          "key": "HKEY_CURRENT_USER\\SOFTWARE\\ListX",
+          "description": "Clé d'installation utilisateur"
+        }
+      ]
+    },
+    "priority": "files"
+  },
+  "metadata": {
+    "author": {
+      "name": "Matthmusic",
+      "url": "https://github.com/Matthmusic"
+    },
+    "category": "Productivité",
+    "tags": [
+      "productivite",
+      "documents",
+      "listing",
+      "pdf",
+      "excel"
+    ],
+    "repository": {
+      "type": "github",
+      "url": "https://github.com/Matthmusic/ListX",
+      "branch": "main"
+    },
+    "license": "MIT",
+    "compatibility": {
+      "os": ["windows"],
+      "minVersion": "Windows 10"
+    }
+  },
+  "installation": {
+    "type": "installer",
+    "downloadUrl": "https://github.com/Matthmusic/ListX/releases/latest/download/ListX-Setup.exe"
+  },
+  "changelog": {
+    "1.0.0": {
+      "date": "2025-01-01",
+      "changes": [
+        "Version initiale",
+        "Génération de listings de documents",
+        "Export PDF et Excel",
+        "Interface utilisateur moderne"
+      ]
+    }
+  }
+}
