@@ -24,8 +24,8 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
-            ${{ env.ELECTRON_CACHE }}
-            ${{ env.npm_config_cache }}
+            ~\AppData\Local\electron\Cache
+            ~\AppData\Local\electron-builder\Cache
           key: ${{ runner.os }}-electron-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-electron-
