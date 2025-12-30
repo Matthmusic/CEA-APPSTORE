@@ -55,7 +55,7 @@ temp/
 tmp/
 
 # Package manager
-package-lock.json
+# package-lock.json est nécessaire pour CI/CD
 yarn.lock
 pnpm-lock.yaml
 
