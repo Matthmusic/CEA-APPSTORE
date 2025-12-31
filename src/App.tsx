@@ -3,6 +3,7 @@ import { Minus, Square, X } from 'lucide-react'
 import { AppStoreProvider } from './context/AppStoreContext'
 import CatalogPage from './pages/CatalogPage'
 import UpdateNotification from './components/UpdateNotification'
+import TicketReporter from './components/TicketReporter'
 import logoIcon from './img/ICO-CEA-APPTSTORE.svg'
 
 function App() {
@@ -76,6 +77,16 @@ function App() {
 
         {/* Update Notification */}
         <UpdateNotification />
+
+        {/* Ticket Reporter - Bouton Signaler un problème */}
+        <TicketReporter
+          appName="CEA-APPSTORE"
+          appVersion={appVersion || '0.0.1'}
+          githubToken={import.meta.env.VITE_GITHUB_TOKEN || ''}
+          githubOwner="Matthmusic"
+          githubRepo="CEA-APPSTORE-TICKETS"
+          position="bottom-right"
+        />
       </div>
     </AppStoreProvider>
   )

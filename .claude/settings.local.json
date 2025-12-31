@@ -16,7 +16,22 @@
       "Bash(git init:*)",
       "Bash(git remote add:*)",
       "Bash(git add:*)",
-      "Bash(del nul)"
+      "Bash(del nul)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nVersion initiale v0.0.1 - CEA AppStore\n\nFonctionnalités :\n- 🎨 Interface moderne avec glassmorphism et thème orange\n- 📦 Catalogue d''applications basé sur GitHub avec mises à jour automatiques\n- 🔍 Détection intelligente des apps via registre Windows et système de fichiers\n- 📥 Téléchargement optimisé avec indicateur de vitesse\n- 🚀 Installation et lancement en un clic\n- 🔄 Système de mise à jour automatique avec notifications toast\n- 📱 Support du format de manifest cea-app.json\n- 🎯 Affichage en grille pour une meilleure visibilité\n\nApplications supportées :\n- ListX\n- To-DoX\n- AUTONUM\n- RENDEXPRESS\n- TONTONKAD\n\n🤖 Généré avec [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push:*)",
+      "Bash(git tag:*)",
+      "Bash(git branch:*)",
+      "Bash(git commit:*)",
+      "Bash(npm run electron:dev:*)",
+      "Bash(Get-Process node -ErrorAction SilentlyContinue)",
+      "Bash(Stop-Process -Force)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(cmd /c:*)",
+      "Bash(git restore:*)",
+      "Bash(del kill-port.bat)",
+      "Bash(del TICKETING_INTEGRATION.md)",
+      "Bash(del srccomponentsTicketReporter.tsx)"
     ]
   }
 }

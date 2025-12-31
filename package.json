@@ -1,13 +1,13 @@
 {
   "name": "cea-appstore",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "App Store interne pour les applications CEA",
   "main": "electron/main.cjs",
   "type": "commonjs",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "electron:dev": "concurrently \"vite\" \"wait-on tcp:5173 && electron .\"",
+    "electron:dev": "concurrently \"vite\" \"wait-on tcp:5588 && electron .\"",
     "electron:build": "npm run build && electron-builder",
     "preview": "vite preview"
   },

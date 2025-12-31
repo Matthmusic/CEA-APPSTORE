@@ -47,7 +47,7 @@ function createWindow() {
   if (app.isPackaged) {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'))
   } else {
-    mainWindow.loadURL('http://localhost:5173')
+    mainWindow.loadURL('http://localhost:5588')
     mainWindow.webContents.openDevTools()
   }
 
