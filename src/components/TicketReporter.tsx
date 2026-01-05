@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Octokit } from '@octokit/rest';
 import { useAppStore } from '../context/AppStoreContext';
 
@@ -36,6 +36,16 @@ export const TicketReporter: React.FC<TicketReporterProps> = ({
     description: '',
     logs: '',
   });
+
+  // Mettre à jour la version quand appVersion change
+  useEffect(() => {
+    if (appVersion && formData.selectedApp === appName) {
+      setFormData(prev => ({
+        ...prev,
+        selectedVersion: appVersion,
+      }));
+    }
+  }, [appVersion, appName]);
 
   const positionClasses = {
     'bottom-right': 'bottom-6 right-6',
