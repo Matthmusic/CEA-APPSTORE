@@ -127,11 +127,21 @@ ipcMain.handle('check-for-updates', async () => {
   return null
 })
 
-ipcMain.handle('download-update', async () => {
-  return await autoUpdater.downloadUpdate()
+ipcMain.on('download-update', () => {
+  if (!autoUpdater) {
+    console.error('AutoUpdater not initialized')
+    return
+  }
+  console.log('Starting update download...')
+  autoUpdater.downloadUpdate()
 })
 
-ipcMain.handle('install-update', () => {
+ipcMain.on('install-update', () => {
+  if (!autoUpdater) {
+    console.error('AutoUpdater not initialized')
+    return
+  }
+  console.log('Quitting and installing update...')
   autoUpdater.quitAndInstall()
 })
 
