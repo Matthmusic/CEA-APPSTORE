@@ -3,8 +3,13 @@ import type { AppInfo, GitHubRepo, GitHubRelease } from '../types'
 import { fetchCeaAppManifestAuto, manifestToAppInfo } from './ceaAppService'
 
 // Utilise un token GitHub si disponible pour augmenter la limite de rate (5000/h au lieu de 60/h)
+// Priorité : localStorage > .env
+const getGitHubToken = () => {
+  return localStorage.getItem('github_token') || import.meta.env.VITE_GITHUB_TOKEN || undefined
+}
+
 const octokit = new Octokit({
-  auth: import.meta.env.VITE_GITHUB_TOKEN || undefined
+  auth: getGitHubToken()
 })
 
 const GITHUB_OWNER = 'Matthmusic'

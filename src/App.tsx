@@ -1,17 +1,31 @@
 import { useEffect, useState, type CSSProperties } from 'react'
-import { Minus, Square, X } from 'lucide-react'
+import { Minus, Square, X, Settings } from 'lucide-react'
 import { AppStoreProvider } from './context/AppStoreContext'
 import CatalogPage from './pages/CatalogPage'
 import UpdateNotification from './components/UpdateNotification'
 import TicketReporter from './components/TicketReporter'
+import SettingsModal from './components/SettingsModal'
 import logoIcon from './img/ICO-CEA-APPTSTORE.svg'
 
 function App() {
   const [appVersion, setAppVersion] = useState<string>('')
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [githubToken, setGithubToken] = useState('')
+  const [githubUsername, setGithubUsername] = useState('')
 
   useEffect(() => {
     window.electronAPI.getAppVersion().then(setAppVersion)
+    // Charger les paramètres sauvegardés
+    setGithubToken(localStorage.getItem('github_token') || import.meta.env.VITE_GITHUB_TOKEN || '')
+    setGithubUsername(localStorage.getItem('github_username') || '')
   }, [])
+
+  const handleSaveSettings = (token: string, username: string) => {
+    setGithubToken(token)
+    setGithubUsername(username)
+    // Recharger la page pour appliquer le nouveau token
+    window.location.reload()
+  }
 
   const handleWindowMinimize = () => {
     window.electronAPI.windowMinimize()
@@ -47,6 +61,13 @@ function App() {
           </div>
           <div className="h-8 flex items-center" style={noDragRegionStyle}>
             <button
+              onClick={() => setSettingsOpen(true)}
+              className="w-10 h-8 flex items-center justify-center hover:bg-white/5 transition-colors"
+              title="Paramètres"
+            >
+              <Settings size={12} className="text-gray-400" strokeWidth={2.5} />
+            </button>
+            <button
               onClick={handleWindowMinimize}
               className="w-12 h-8 flex items-center justify-center hover:bg-white/5 transition-colors"
               title="Reduire"
@@ -81,11 +102,19 @@ function App() {
         {/* Ticket Reporter - Bouton Signaler un problème */}
         <TicketReporter
           appName="CEA-APPSTORE"
-          appVersion={appVersion || '0.0.1'}
-          githubToken={import.meta.env.VITE_GITHUB_TOKEN || ''}
+          appVersion={appVersion}
+          githubToken={githubToken}
           githubOwner="Matthmusic"
           githubRepo="CEA-APPSTORE-TICKETS"
           position="bottom-right"
+          username={githubUsername}
+        />
+
+        {/* Settings Modal */}
+        <SettingsModal
+          isOpen={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
+          onSave={handleSaveSettings}
         />
       </div>
     </AppStoreProvider>

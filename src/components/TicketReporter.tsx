@@ -9,6 +9,7 @@ interface TicketReporterProps {
   githubOwner?: string;
   githubRepo?: string;
   position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
+  username?: string;
 }
 
 export const TicketReporter: React.FC<TicketReporterProps> = ({
@@ -18,6 +19,7 @@ export const TicketReporter: React.FC<TicketReporterProps> = ({
   githubOwner = 'Matthmusic',
   githubRepo = 'CEA-APPSTORE-TICKETS',
   position = 'bottom-right',
+  username = 'Utilisateur anonyme',
 }) => {
   const { apps } = useAppStore();
   const [isOpen, setIsOpen] = useState(false);
@@ -50,10 +52,7 @@ export const TicketReporter: React.FC<TicketReporterProps> = ({
     try {
       const octokit = new Octokit({ auth: githubToken });
 
-      const userInfo = {
-        os: navigator.platform,
-        timestamp: new Date().toISOString(),
-      };
+      const timestamp = new Date().toISOString();
 
       const issueTitle = `[${formData.selectedApp} v${formData.selectedVersion}] ${formData.title}`;
       const issueBody = `## Description
@@ -64,10 +63,10 @@ ${formData.description}
 
 ## Informations Système
 
+- **Créé par:** ${username || 'Utilisateur anonyme'}
 - **Application:** ${formData.selectedApp}
 - **Version:** ${formData.selectedVersion}
-- **Système d'exploitation:** ${userInfo.os}
-- **Date:** ${new Date(userInfo.timestamp).toLocaleString('fr-FR')}
+- **Date:** ${new Date(timestamp).toLocaleString('fr-FR')}
 
 ${formData.logs ? `## Logs
 
