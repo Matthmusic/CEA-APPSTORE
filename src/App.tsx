@@ -1,5 +1,5 @@
 import { useEffect, useState, type CSSProperties } from 'react'
-import { Minus, Square, X, Settings } from 'lucide-react'
+import { Minus, Square, X, Settings, RefreshCw } from 'lucide-react'
 import { AppStoreProvider } from './context/AppStoreContext'
 import CatalogPage from './pages/CatalogPage'
 import UpdateNotification from './components/UpdateNotification'
@@ -39,6 +39,10 @@ function App() {
     window.electronAPI.windowClose()
   }
 
+  const handleRefresh = () => {
+    window.location.reload()
+  }
+
   const dragRegionStyle = { WebkitAppRegion: 'drag' } as CSSProperties
   const noDragRegionStyle = { WebkitAppRegion: 'no-drag' } as CSSProperties
 
@@ -60,6 +64,13 @@ function App() {
             {appVersion && `v${appVersion}`}
           </div>
           <div className="h-8 flex items-center" style={noDragRegionStyle}>
+            <button
+              onClick={handleRefresh}
+              className="w-10 h-8 flex items-center justify-center hover:bg-white/5 transition-colors"
+              title="Rafraîchir"
+            >
+              <RefreshCw size={12} className="text-gray-400" strokeWidth={2.5} />
+            </button>
             <button
               onClick={() => setSettingsOpen(true)}
               className="w-10 h-8 flex items-center justify-center hover:bg-white/5 transition-colors"

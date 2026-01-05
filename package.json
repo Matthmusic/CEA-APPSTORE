@@ -1,6 +1,6 @@
 {
   "name": "cea-appstore",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "App Store interne pour les applications CEA",
   "main": "electron/main.cjs",
   "type": "commonjs",
