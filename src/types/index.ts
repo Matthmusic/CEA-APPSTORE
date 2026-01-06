@@ -41,6 +41,7 @@ export interface AppInfo {
   downloadUrl?: string
   releaseNotes?: string
   fileSize?: number
+  detectionConfig?: DetectionConfig
 }
 
 export interface InstalledApp {
@@ -77,6 +78,13 @@ export interface UpdateInfo {
 }
 
 export type FilterType = 'all' | 'installed' | 'updates'
+
+export interface DetectionConfig {
+  priority: 'files' | 'directories' | 'registry'
+  files: Array<{ path: string; description?: string }>
+  directories: Array<{ path: string; description?: string }>
+  registry?: Array<{ key: string; value?: string; description?: string }>
+}
 
 // CEA App Manifest Types
 export interface CeaAppManifest {
@@ -184,7 +192,7 @@ export interface ElectronAPI {
   downloadApp: (downloadUrl: string, appName: string) => Promise<{ success: boolean; filePath?: string; error?: string }>
   installApp: (exePath: string) => Promise<{ success: boolean; error?: string }>
   onAppDownloadProgress: (callback: (data: DownloadProgress) => void) => void
-  launchApp: (appData: { id: string; name: string }) => Promise<{ success: boolean; error?: string }>
+  launchApp: (appData: { id: string; name: string; detectionConfig?: DetectionConfig }) => Promise<{ success: boolean; error?: string }>
 
   // External
   openExternal: (url: string) => Promise<void>
@@ -194,12 +202,7 @@ export interface ElectronAPI {
   getUserDataPath: () => Promise<string>
 
   // CEA App Manifest detection
-  checkAppInstallation: (detectionConfig: {
-    priority: 'files' | 'directories' | 'registry'
-    files: Array<{ path: string; description?: string }>
-    directories: Array<{ path: string; description?: string }>
-    registry?: Array<{ key: string; value?: string; description?: string }>
-  }) => Promise<{
+  checkAppInstallation: (detectionConfig: DetectionConfig) => Promise<{
     isInstalled: boolean
     detectedPath?: string
     detectionMethod?: 'file' | 'directory' | 'registry'

@@ -1,5 +1,6 @@
 import { Octokit } from '@octokit/rest'
 import type { CeaAppManifest, AppInfo } from '../types'
+import { createDetectionConfig } from './detectionService'
 
 // Utilise un token GitHub si disponible pour augmenter la limite de rate (5000/h au lieu de 60/h)
 const octokit = new Octokit({
@@ -88,6 +89,7 @@ export function manifestToAppInfo(
     latestReleaseDate: manifest.changelog[manifest.app.version]?.date,
     downloadUrl: manifest.installation.downloadUrl,
     releaseNotes: manifest.changelog[manifest.app.version]?.changes.join('\n'),
+    detectionConfig: createDetectionConfig(manifest),
   }
 }
 

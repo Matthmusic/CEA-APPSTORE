@@ -1,4 +1,4 @@
-import type { CeaAppManifest } from '../types'
+import type { CeaAppManifest, DetectionConfig } from '../types'
 
 /**
  * Check if an app is installed on the system based on manifest detection rules
@@ -41,13 +41,6 @@ export function expandEnvPath(path: string): string {
 /**
  * Create detection config from manifest for Electron IPC
  */
-export interface DetectionConfig {
-  priority: 'files' | 'directories' | 'registry'
-  files: Array<{ path: string; description?: string }>
-  directories: Array<{ path: string; description?: string }>
-  registry?: Array<{ key: string; value?: string; description?: string }>
-}
-
 export function createDetectionConfig(manifest: CeaAppManifest): DetectionConfig {
   const { detection } = manifest
 

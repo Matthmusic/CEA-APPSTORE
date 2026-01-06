@@ -228,7 +228,11 @@ export function AppStoreProvider({ children }: AppStoreProviderProps) {
   async function launchInstalledApp(app: AppWithStatus) {
     try {
       setError(null)
-      const result = await window.electronAPI.launchApp({ id: app.id, name: app.name })
+      const result = await window.electronAPI.launchApp({
+        id: app.id,
+        name: app.name,
+        detectionConfig: app.detectionConfig,
+      })
       if (!result.success) {
         throw new Error(result.error || "Echec du lancement de l'application")
       }

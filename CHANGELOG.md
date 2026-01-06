@@ -15,6 +15,12 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 - Tri alphabétique des applications dans le catalogue et le sélecteur de signalement.
 - Le sélecteur de signalement n'affiche plus la version dans le libellé.
 
+## [0.0.10] - 2026-01-06
+
+### Fixed
+- Lancement des apps via les chemins de dÇ¸tection du manifest CEA quand le registre ne renvoie rien.
+- RÇ¸solution de `%LOCALAPPDATA%` alignÇ¸e sur le dossier utilisateur Windows.
+
 ## [0.0.1] - 2025-12-30
 
 ### Added
@@ -75,3 +81,4 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 
 [0.0.1]: https://github.com/Matthmusic/CEA-APPSTORE/releases/tag/v0.0.1
 [0.0.9]: https://github.com/Matthmusic/CEA-APPSTORE/releases/tag/v0.0.9
+[0.0.10]: https://github.com/Matthmusic/CEA-APPSTORE/releases/tag/v0.0.10

@@ -21,6 +21,7 @@ const appNameMapping = {
   'autonum': 'autonum',
   'rendexpress': 'rendexpress',
   'tontonkad': 'tontonkad',
+  'caneflow': 'caneflow',
 }
 
 // ============================================
@@ -322,6 +323,18 @@ function normalizeRegistryPath(value) {
   return cleaned
 }
 
+function expandEnvPath(pathStr) {
+  const appData = process.env.APPDATA || app.getPath('appData')
+  const localAppData = process.env.LOCALAPPDATA || path.join(app.getPath('home'), 'AppData', 'Local')
+  return pathStr
+    .replace(/%APPDATA%/gi, appData)
+    .replace(/%LOCALAPPDATA%/gi, localAppData)
+    .replace(/%PROGRAMFILES%/gi, process.env.PROGRAMFILES || 'C:\\Program Files')
+    .replace(/%PROGRAMFILES\(X86\)%/gi, process.env['PROGRAMFILES(X86)'] || 'C:\\Program Files (x86)')
+    .replace(/%USERPROFILE%/gi, app.getPath('home'))
+    .replace(/%TEMP%/gi, app.getPath('temp'))
+}
+
 function findExecutableInDirectory(directory, appName, appId) {
   if (!directory || !fs.existsSync(directory)) return null
 
@@ -383,6 +396,64 @@ async function resolveLaunchPath(appId, appName) {
   }
 
   return null
+}
+
+function resolveLaunchPathFromDetectionConfig(detectionConfig, appName, appId) {
+  if (!detectionConfig) return null
+
+  const { priority, files, directories } = detectionConfig
+
+  const checkFiles = () => {
+    if (!files || files.length === 0) return null
+    for (const fileObj of files) {
+      if (!fileObj?.path) continue
+      const expandedPath = expandEnvPath(fileObj.path)
+      if (!fs.existsSync(expandedPath)) continue
+      try {
+        const stats = fs.statSync(expandedPath)
+        if (stats.isDirectory()) {
+          const exePath = findExecutableInDirectory(expandedPath, appName, appId)
+          if (exePath) return exePath
+        } else {
+          return expandedPath
+        }
+      } catch {
+        continue
+      }
+    }
+    return null
+  }
+
+  const checkDirectories = () => {
+    if (!directories || directories.length === 0) return null
+    for (const dirObj of directories) {
+      if (!dirObj?.path) continue
+      const expandedPath = expandEnvPath(dirObj.path)
+      if (!fs.existsSync(expandedPath)) continue
+      try {
+        const stats = fs.statSync(expandedPath)
+        if (stats.isDirectory()) {
+          const exePath = findExecutableInDirectory(expandedPath, appName, appId)
+          if (exePath) return exePath
+        } else {
+          return expandedPath
+        }
+      } catch {
+        continue
+      }
+    }
+    return null
+  }
+
+  if (priority === 'files') {
+    return checkFiles() || checkDirectories()
+  }
+
+  if (priority === 'directories') {
+    return checkDirectories() || checkFiles()
+  }
+
+  return checkFiles() || checkDirectories()
 }
 
 ipcMain.handle('get-installed-apps', async () => {
@@ -601,7 +672,9 @@ ipcMain.handle('install-app', async (event, exePath) => {
 
 ipcMain.handle('launch-app', async (event, appData) => {
   try {
-    const exePath = await resolveLaunchPath(appData?.id, appData?.name)
+    const exePath =
+      (await resolveLaunchPath(appData?.id, appData?.name)) ||
+      resolveLaunchPathFromDetectionConfig(appData?.detectionConfig, appData?.name, appData?.id)
     if (!exePath) {
       return { success: false, error: 'Executable introuvable' }
     }
@@ -646,23 +719,12 @@ ipcMain.handle('check-app-installation', async (event, detectionConfig) => {
   try {
     const { priority, files, directories, registry } = detectionConfig
 
-    // Helper to expand environment variables
-    const expandPath = (pathStr) => {
-      return pathStr
-        .replace(/%APPDATA%/gi, app.getPath('appData'))
-        .replace(/%LOCALAPPDATA%/gi, app.getPath('userData').replace(/[^\\]+$/, ''))
-        .replace(/%PROGRAMFILES%/gi, process.env.PROGRAMFILES || 'C:\\Program Files')
-        .replace(/%PROGRAMFILES\(X86\)%/gi, process.env['PROGRAMFILES(X86)'] || 'C:\\Program Files (x86)')
-        .replace(/%USERPROFILE%/gi, app.getPath('home'))
-        .replace(/%TEMP%/gi, app.getPath('temp'))
-    }
-
     // Check files
     const checkFiles = () => {
       if (!files || files.length === 0) return null
 
       for (const fileObj of files) {
-        const expandedPath = expandPath(fileObj.path)
+        const expandedPath = expandEnvPath(fileObj.path)
         if (fs.existsSync(expandedPath)) {
           return {
             isInstalled: true,
@@ -679,7 +741,7 @@ ipcMain.handle('check-app-installation', async (event, detectionConfig) => {
       if (!directories || directories.length === 0) return null
 
       for (const dirObj of directories) {
-        const expandedPath = expandPath(dirObj.path)
+        const expandedPath = expandEnvPath(dirObj.path)
         if (fs.existsSync(expandedPath)) {
           return {
             isInstalled: true,
