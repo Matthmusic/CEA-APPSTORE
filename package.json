@@ -1,6 +1,6 @@
 {
   "name": "cea-appstore",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "App Store interne pour les applications CEA",
   "main": "electron/main.cjs",
   "type": "commonjs",
@@ -65,7 +65,9 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "build/icon.ico"
