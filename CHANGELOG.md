@@ -5,6 +5,16 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [0.0.9] - 2026-01-06
+
+### Added
+- CaneFlow ajouté au scan du catalogue via `cea-app.json`.
+- Alerte visuelle sur le bouton de rafraîchissement quand le catalogue est vide ou en erreur.
+
+### Changed
+- Tri alphabétique des applications dans le catalogue et le sélecteur de signalement.
+- Le sélecteur de signalement n'affiche plus la version dans le libellé.
+
 ## [0.0.1] - 2025-12-30
 
 ### Added
@@ -64,3 +74,4 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 **Note** : Ceci est la première version de CEA AppStore. Toutes les fonctionnalités sont nouvelles.
 
 [0.0.1]: https://github.com/Matthmusic/CEA-APPSTORE/releases/tag/v0.0.1
+[0.0.9]: https://github.com/Matthmusic/CEA-APPSTORE/releases/tag/v0.0.9

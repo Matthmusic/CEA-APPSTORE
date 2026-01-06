@@ -1,18 +1,36 @@
+import { useEffect } from 'react'
 import { Filter, RefreshCw, Loader2, AlertCircle } from 'lucide-react'
 import { useAppStore } from '../context/AppStoreContext'
 import AppCard from '../components/AppCard'
 import EmptyState from '../components/EmptyState'
 import ceaLogo from '../img/CEA-APPSTOREBLANC.svg'
 
-export default function CatalogPage() {
+interface CatalogPageProps {
+  onRefreshAttentionChange?: (needsAttention: boolean) => void
+}
+
+export default function CatalogPage({ onRefreshAttentionChange }: CatalogPageProps) {
   const {
+    apps,
     filteredApps,
     loading,
     error,
+    filter,
+    searchQuery,
     refreshCatalog,
     downloadAndInstallApp,
     launchInstalledApp,
   } = useAppStore()
+
+  useEffect(() => {
+    if (!onRefreshAttentionChange) return
+
+    const shouldBlink =
+      !loading &&
+      (Boolean(error) || (apps.length === 0 && filter === 'all' && searchQuery.trim() === ''))
+
+    onRefreshAttentionChange(shouldBlink)
+  }, [apps.length, error, filter, loading, onRefreshAttentionChange, searchQuery])
 
   const handleRefresh = () => {
     refreshCatalog()

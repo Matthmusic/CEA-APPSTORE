@@ -239,23 +239,25 @@ export function AppStoreProvider({ children }: AppStoreProviderProps) {
   }
 
   // Filter apps
-  const filteredApps = apps.filter((app) => {
-    // Apply filter
-    if (filter === 'installed' && !app.installed) return false
-    if (filter === 'updates' && !app.canUpdate) return false
+  const filteredApps = apps
+    .filter((app) => {
+      // Apply filter
+      if (filter === 'installed' && !app.installed) return false
+      if (filter === 'updates' && !app.canUpdate) return false
 
-    // Apply search
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase()
-      return (
-        app.name.toLowerCase().includes(query) ||
-        app.description.toLowerCase().includes(query) ||
-        app.category.toLowerCase().includes(query)
-      )
-    }
+      // Apply search
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase()
+        return (
+          app.name.toLowerCase().includes(query) ||
+          app.description.toLowerCase().includes(query) ||
+          app.category.toLowerCase().includes(query)
+        )
+      }
 
-    return true
-  })
+      return true
+    })
+    .sort((a, b) => a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' }))
 
   const value: AppStoreContextType = {
     apps,

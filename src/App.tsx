@@ -12,6 +12,7 @@ function App() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [githubToken, setGithubToken] = useState('')
   const [githubUsername, setGithubUsername] = useState('')
+  const [refreshAttention, setRefreshAttention] = useState(false)
 
   useEffect(() => {
     window.electronAPI.getAppVersion().then(setAppVersion)
@@ -66,10 +67,14 @@ function App() {
           <div className="h-8 flex items-center" style={noDragRegionStyle}>
             <button
               onClick={handleRefresh}
-              className="w-10 h-8 flex items-center justify-center hover:bg-white/5 transition-colors"
+              className={`w-10 h-8 flex items-center justify-center hover:bg-white/5 transition-colors${refreshAttention ? ' refresh-attention' : ''}`}
               title="Rafraîchir"
             >
-              <RefreshCw size={12} className="text-gray-400" strokeWidth={2.5} />
+              <RefreshCw
+                size={12}
+                className={refreshAttention ? 'text-primary' : 'text-gray-400'}
+                strokeWidth={2.5}
+              />
             </button>
             <button
               onClick={() => setSettingsOpen(true)}
@@ -104,7 +109,7 @@ function App() {
 
         {/* Main Content */}
         <div className="flex-1 overflow-hidden">
-          <CatalogPage />
+          <CatalogPage onRefreshAttentionChange={setRefreshAttention} />
         </div>
 
         {/* Update Notification */}

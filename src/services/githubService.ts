@@ -21,6 +21,7 @@ const REPOS_TO_SCAN = [
   'AUTONUM',
   'RENDEXPRESS',
   'TONTONKAD',
+  'CaneFlow',
 ]
 
 // Fallback: Liste des apps connues (si pas de cea-app.json)

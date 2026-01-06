@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Octokit } from '@octokit/rest';
 import { useAppStore } from '../context/AppStoreContext';
 
@@ -26,6 +26,11 @@ export const TicketReporter: React.FC<TicketReporterProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const sortedApps = useMemo(
+    () => [...apps].sort((a, b) => a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' })),
+    [apps]
+  );
 
   const [formData, setFormData] = useState({
     selectedApp: appName,
@@ -228,9 +233,9 @@ ${formData.logs}
                       className="w-full px-4 py-2 bg-dark-bg border border-dark-border rounded-lg text-white focus:outline-none focus:border-primary"
                     >
                       <option value="CEA-APPSTORE">CEA-APPSTORE (cette application)</option>
-                      {apps.map((app) => (
+                      {sortedApps.map((app) => (
                         <option key={app.name} value={app.name}>
-                          {app.name} {app.currentVersion ? `(v${app.currentVersion})` : app.installed ? '(installée)' : ''}
+                          {app.name} {app.installed ? '(installée)' : ''}
                         </option>
                       ))}
                     </select>
