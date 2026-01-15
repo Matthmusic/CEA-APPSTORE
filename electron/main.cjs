@@ -93,28 +93,36 @@ autoUpdater.autoDownload = false
 autoUpdater.autoInstallOnAppQuit = true
 
 autoUpdater.on('update-available', (info) => {
-  mainWindow.webContents.send('update-available', {
-    version: info.version,
-    releaseDate: info.releaseDate,
-    releaseNotes: info.releaseNotes,
-  })
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('update-available', {
+      version: info.version,
+      releaseDate: info.releaseDate,
+      releaseNotes: info.releaseNotes,
+    })
+  }
 })
 
 autoUpdater.on('download-progress', (progressObj) => {
-  mainWindow.webContents.send('download-progress', {
-    percent: progressObj.percent,
-    transferred: progressObj.transferred,
-    total: progressObj.total,
-    bytesPerSecond: progressObj.bytesPerSecond,
-  })
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('download-progress', {
+      percent: progressObj.percent,
+      transferred: progressObj.transferred,
+      total: progressObj.total,
+      bytesPerSecond: progressObj.bytesPerSecond,
+    })
+  }
 })
 
 autoUpdater.on('update-downloaded', () => {
-  mainWindow.webContents.send('update-downloaded')
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('update-downloaded')
+  }
 })
 
 autoUpdater.on('error', (error) => {
-  mainWindow.webContents.send('update-error', error.message)
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('update-error', error.message)
+  }
 })
 
 // ============================================
@@ -622,13 +630,16 @@ ipcMain.handle('download-app', async (event, downloadUrl, appName) => {
       if (now - lastProgressUpdate > 100) {
         const bytesPerSecond = ((downloadedSize - lastDownloadedSize) / (now - lastProgressUpdate)) * 1000
 
-        mainWindow.webContents.send('app-download-progress', {
-          appName,
-          percent: progress,
-          downloaded: downloadedSize,
-          total: totalSize,
-          bytesPerSecond: Math.round(bytesPerSecond),
-        })
+        // Vérifier que mainWindow existe et n'est pas détruite avant d'envoyer
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('app-download-progress', {
+            appName,
+            percent: progress,
+            downloaded: downloadedSize,
+            total: totalSize,
+            bytesPerSecond: Math.round(bytesPerSecond),
+          })
+        }
 
         lastProgressUpdate = now
         lastDownloadedSize = downloadedSize
@@ -657,13 +668,52 @@ ipcMain.handle('download-app', async (event, downloadUrl, appName) => {
 
 ipcMain.handle('install-app', async (event, exePath) => {
   try {
-    // Launch installer automatically
-    spawn(exePath, [], {
-      detached: true,
-      stdio: 'ignore',
-    }).unref()
+    // Attendre un court instant pour s'assurer que le fichier est complètement fermé
+    // après le téléchargement et que l'antivirus a fini de le scanner
+    await new Promise(resolve => setTimeout(resolve, 500))
 
-    return { success: true }
+    // Vérifier que le fichier existe et est accessible
+    if (!fs.existsSync(exePath)) {
+      return { success: false, error: 'Le fichier d\'installation n\'existe pas' }
+    }
+
+    // Retry logic pour gérer les cas où le fichier est temporairement verrouillé
+    let lastError = null
+    const maxRetries = 3
+
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        // Vérifier que le fichier est lisible
+        fs.accessSync(exePath, fs.constants.R_OK)
+
+        // Launch installer automatically
+        spawn(exePath, [], {
+          detached: true,
+          stdio: 'ignore',
+        }).unref()
+
+        return { success: true }
+      } catch (error) {
+        lastError = error
+        console.error(`Error installing app (attempt ${attempt + 1}/${maxRetries}):`, error)
+
+        // Si c'est une erreur EBUSY, attendre un peu plus avant de réessayer
+        if (error.code === 'EBUSY' && attempt < maxRetries - 1) {
+          await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)))
+        } else if (attempt < maxRetries - 1) {
+          // Attendre avant de réessayer pour d'autres erreurs
+          await new Promise(resolve => setTimeout(resolve, 500))
+        }
+      }
+    }
+
+    // Si toutes les tentatives ont échoué
+    return {
+      success: false,
+      error: lastError?.code === 'EBUSY'
+        ? 'Le fichier est en cours d\'utilisation. Veuillez fermer tout antivirus qui pourrait le scanner et réessayer.'
+        : lastError?.message || 'Erreur inconnue lors du lancement de l\'installateur'
+    }
   } catch (error) {
     console.error('Error installing app:', error)
     return { success: false, error: error.message }
