@@ -1,213 +1,236 @@
-import { Download, Check, RefreshCw, ExternalLink, Rocket } from 'lucide-react'
+import { useState } from 'react'
+import type { DragEvent } from 'react'
+import { Download, Check, RefreshCw, ExternalLink, Rocket, GripVertical } from 'lucide-react'
 import type { AppWithStatus } from '../types'
 import { getAppColor, getAppLogo } from '../utils/appLogos'
-import { useState } from 'react'
 
 interface AppCardProps {
   app: AppWithStatus
   onInstall: (app: AppWithStatus) => void
   onLaunch: (app: AppWithStatus) => void
+  draggable?: boolean
+  isDragging?: boolean
+  isDragOver?: boolean
+  onDragStart?: () => void
+  onDragOver?: (e: DragEvent<HTMLDivElement>) => void
+  onDragEnd?: () => void
+  onDrop?: () => void
 }
 
-export default function AppCard({ app, onInstall, onLaunch }: AppCardProps) {
+export default function AppCard({
+  app, onInstall, onLaunch,
+  draggable: isDraggable, isDragging, isDragOver,
+  onDragStart, onDragOver, onDragEnd, onDrop,
+}: AppCardProps) {
   const [logoError, setLogoError] = useState(false)
   const appColor = getAppColor(app.id)
-  // Utilise le logo du cea-app.json si disponible, sinon fallback sur le logo local
   const appLogo = app.icon || getAppLogo(app.id)
 
-  const handleInstall = () => {
-    if (!app.isDownloading) {
-      onInstall(app)
-    }
-  }
+  const handleInstall = () => { if (!app.isDownloading) onInstall(app) }
+  const handleOpenRepo = () => { window.electronAPI.openExternal(app.repoUrl) }
+  const handleLaunch = () => { onLaunch(app) }
 
-  const handleOpenRepo = () => {
-    window.electronAPI.openExternal(app.repoUrl)
-  }
-
-  const handleLaunch = () => {
-    onLaunch(app)
-  }
 
   return (
-    <div className="group relative w-full">
-      {/* Glassmorphism Card */}
-      <div className="relative backdrop-blur-xl bg-white/5 border border-white/10 hover:border-primary rounded-2xl p-5 shadow-2xl transition-all duration-500 overflow-hidden">
+    <div
+      className={`group relative w-full transition-all duration-200
+        ${isDraggable ? 'cursor-grab active:cursor-grabbing' : ''}
+        ${isDragging ? 'opacity-30 scale-95' : ''}
+      `}
+      draggable={isDraggable}
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDragEnd={onDragEnd}
+      onDrop={onDrop}
+    >
+      <div className={`relative bg-dark-card border rounded-2xl overflow-hidden shadow-xl transition-all duration-300
+        ${isDragOver
+          ? 'border-primary shadow-primary/30 shadow-lg scale-[1.02]'
+          : 'border-dark-border hover:border-primary/50 hover:shadow-primary/10 hover:shadow-lg'
+        }`}
+      >
 
-        {/* Gradient Background Effect */}
+        {/* ── LOGO BANNER ─────────────────────────────── */}
         <div
-          className="absolute inset-[1px] opacity-0 transition-opacity duration-500 rounded-[15px] pointer-events-none"
+          className="relative h-36 flex items-center justify-center overflow-hidden"
           style={{
-            background: `linear-gradient(135deg, ${appColor.from} 0%, ${appColor.to} 100%)`
+            background: `linear-gradient(135deg, ${appColor.from}28 0%, ${appColor.to}18 100%)`,
           }}
-        />
-
-        {/* Status Badges */}
-        <div className="absolute top-3 right-3 z-10 flex gap-2">
-          {app.installed && (
-            <div className="backdrop-blur-md bg-green-500/20 border border-green-500/30 text-green-400 px-2.5 py-1 rounded-full text-xs font-medium shadow-lg">
-              <Check size={12} className="inline" />
-            </div>
-          )}
-          {app.canUpdate && (
-            <div className="backdrop-blur-md bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 px-2.5 py-1 rounded-full text-xs font-medium shadow-lg animate-pulse">
-              <RefreshCw size={12} className="inline" />
-            </div>
-          )}
-        </div>
-
-        {/* Logo Section */}
-        <div className="relative flex flex-col items-center mb-4">
+        >
+          {/* Ambient glow behind logo */}
           <div
-            className="w-32 h-32 rounded-2xl flex items-center justify-center mb-4 relative overflow-hidden transition-transform duration-500"
+            className="absolute w-28 h-28 rounded-full blur-3xl opacity-35 pointer-events-none"
+            style={{ background: `radial-gradient(circle, ${appColor.from} 0%, transparent 70%)` }}
+          />
+
+          {/* Logo container */}
+          <div
+            className="relative z-10 w-20 h-20 rounded-2xl flex items-center justify-center overflow-hidden border border-white/10 shadow-2xl"
             style={{
               background: logoError || !appLogo
                 ? `linear-gradient(135deg, ${appColor.from} 0%, ${appColor.to} 100%)`
-                : 'rgba(255, 255, 255, 0.03)',
+                : 'rgba(255,255,255,0.05)',
             }}
           >
             {appLogo && !logoError ? (
               <img
                 src={appLogo}
                 alt={app.name}
-                className="w-full h-full object-contain p-4"
+                className="w-full h-full object-contain p-2.5"
                 onError={() => setLogoError(true)}
               />
             ) : (
-              <div className="text-5xl font-bold text-white/40">
-                {app.name.charAt(0)}
+              <span className="text-3xl font-bold text-white/50">{app.name.charAt(0)}</span>
+            )}
+          </div>
+
+          {/* Status badges – top-right */}
+          <div className="absolute top-2.5 right-2.5 z-20 flex gap-1.5">
+            {app.installed && (
+              <div className="bg-green-500/20 border border-green-500/30 text-green-400 p-1 rounded-full shadow-md">
+                <Check size={10} />
+              </div>
+            )}
+            {app.canUpdate && (
+              <div className="bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 p-1 rounded-full shadow-md animate-pulse">
+                <RefreshCw size={10} />
               </div>
             )}
           </div>
 
-          {/* App Info */}
-          <h3 className="text-base font-bold text-white mb-1 text-center transition-colors duration-300">
+          {/* Drag handle – top-left */}
+          {isDraggable && (
+            <div className="absolute top-2.5 left-2.5 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <GripVertical size={13} className="text-white/35" />
+            </div>
+          )}
+
+          {/* Bottom fade into card body */}
+          <div className="absolute bottom-0 inset-x-0 h-8 bg-gradient-to-t from-dark-card to-transparent pointer-events-none" />
+        </div>
+
+        {/* ── INFO SECTION ────────────────────────────── */}
+        <div className="px-4 pt-3 pb-4">
+
+          {/* Name */}
+          <h3 className="text-sm font-bold text-white leading-tight truncate mb-0.5">
             {app.name}
           </h3>
-          <p className="text-xs text-gray-400 mb-2">{app.category}</p>
-          {app.shortDescription && (
-            <p className="text-xs text-gray-500 text-center leading-relaxed line-clamp-2">
-              {app.shortDescription}
+
+          {/* Category + Version inline */}
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] text-gray-500">{app.category}</span>
+            <span className="text-[11px] font-mono font-semibold text-primary/70">
+              {app.latestVersion || 'N/A'}
+            </span>
+          </div>
+
+          {/* Description (1 line) or Download progress */}
+          {app.isDownloading ? (
+            <div className="mb-3">
+              <div className="flex items-center justify-between text-[11px] text-gray-400 mb-1.5">
+                <span>Téléchargement…</span>
+                <div className="flex items-center gap-1.5">
+                  {app.downloadSpeed && (
+                    <span className="text-primary font-medium">
+                      {(app.downloadSpeed / (1024 * 1024)).toFixed(1)} MB/s
+                    </span>
+                  )}
+                  <span className="font-mono">{Math.round(app.downloadProgress)}%</span>
+                </div>
+              </div>
+              <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-300"
+                  style={{ background: `linear-gradient(90deg, ${appColor.from}, ${appColor.to})`, width: `${app.downloadProgress}%` }}
+                />
+              </div>
+            </div>
+          ) : (
+            <p className="text-[11px] text-gray-500 line-clamp-1 mb-3 min-h-[14px]">
+              {app.shortDescription ?? ''}
             </p>
           )}
-        </div>
 
-        {/* Version */}
-        <div className="flex items-center justify-center gap-2 mb-3 px-2 py-1.5 rounded-lg bg-white/5 border border-white/10">
-          <span className="text-xs text-gray-400">Version</span>
-          <span className="text-sm font-mono font-bold text-primary">
-            {app.latestVersion || 'N/A'}
-          </span>
-        </div>
-
-        {/* Download Progress */}
-        {app.isDownloading && (
-          <div className="mb-3">
-            <div className="flex items-center justify-between text-xs text-gray-400 mb-2">
-              <div className="flex items-center gap-2">
-                <span>Téléchargement...</span>
-                {app.downloadSpeed && (
-                  <span className="text-primary font-medium">
-                    {(app.downloadSpeed / (1024 * 1024)).toFixed(1)} MB/s
-                  </span>
-                )}
-              </div>
-              <span className="font-mono">{Math.round(app.downloadProgress)}%</span>
-            </div>
-            <div className="h-2 bg-white/5 rounded-full overflow-hidden border border-white/10">
-              <div
-                className="h-full bg-gradient-to-r from-primary via-primary-light to-primary rounded-full transition-all duration-300"
-                style={{ width: `${app.downloadProgress}%` }}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Action Buttons */}
-        <div className="space-y-2">
-          {/* Primary Action with GitHub */}
+          {/* ── ACTIONS ──────────────────────────────── */}
           {!app.installed && app.downloadUrl && (
-            <div className="flex gap-2">
+            <div className="flex gap-1.5">
               <button
                 onClick={handleInstall}
                 disabled={app.isDownloading}
-                className="flex-[3] bg-gradient-to-r from-primary to-primary-light hover:from-primary-light hover:to-primary text-black text-sm font-semibold py-2 px-3 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-primary/50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex-1 bg-gradient-to-r from-primary to-primary-light hover:opacity-90 text-black text-xs font-bold py-2 px-3 rounded-xl transition-all duration-200 hover:shadow-md hover:shadow-primary/30 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
               >
-                <Download size={16} />
-                {app.isDownloading ? 'Téléchargement...' : 'Installer'}
+                <Download size={12} />
+                {app.isDownloading ? 'Téléchargement…' : 'Installer'}
               </button>
               <button
                 onClick={handleOpenRepo}
-                className="flex-1 bg-dark-card/60 hover:bg-dark-border/70 border border-dark-border text-gray-300 hover:text-white py-2 px-2 rounded-xl transition-colors duration-300 flex items-center justify-center"
+                className="bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 hover:text-white py-2 px-2.5 rounded-xl transition-colors duration-200 flex items-center justify-center"
                 title="Voir sur GitHub"
+                aria-label="Voir sur GitHub"
               >
-                <ExternalLink size={16} />
+                <ExternalLink size={12} />
               </button>
             </div>
           )}
 
           {app.installed && app.canUpdate && app.downloadUrl && (
-            <div className="flex gap-2">
+            <div className="flex gap-1.5">
               <button
                 onClick={handleInstall}
                 disabled={app.isDownloading}
-                className="flex-[3] bg-gradient-to-r from-primary to-primary-light hover:from-primary-light hover:to-primary text-black text-sm font-semibold py-2 px-3 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-primary/50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 whitespace-nowrap"
+                className="flex-1 bg-gradient-to-r from-primary to-primary-light hover:opacity-90 text-black text-xs font-bold py-2 px-3 rounded-xl transition-all duration-200 hover:shadow-md hover:shadow-primary/30 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
               >
-                <RefreshCw size={16} />
-                {app.isDownloading ? 'Téléchargement...' : 'Mettre à jour'}
+                <RefreshCw size={12} />
+                {app.isDownloading ? 'Téléchargement…' : 'Mettre à jour'}
               </button>
               <button
                 onClick={handleOpenRepo}
-                className="flex-1 bg-dark-card/60 hover:bg-dark-border/70 border border-dark-border text-gray-300 hover:text-white py-2 px-2 rounded-xl transition-colors duration-300 flex items-center justify-center"
+                className="bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 hover:text-white py-2 px-2.5 rounded-xl transition-colors duration-200 flex items-center justify-center"
                 title="Voir sur GitHub"
+                aria-label="Voir sur GitHub"
               >
-                <ExternalLink size={16} />
+                <ExternalLink size={12} />
               </button>
             </div>
           )}
 
           {app.installed && !app.canUpdate && (
-            <div className="flex gap-2">
+            <div className="flex gap-1.5">
               <button
                 onClick={handleLaunch}
-                className="launch-button flex-[3]"
-                title="Lancer l'application"
+                className="flex-1 bg-gradient-to-r from-primary to-primary-light hover:opacity-90 text-black text-xs font-bold py-2 px-3 rounded-xl transition-all duration-200 hover:shadow-md hover:shadow-primary/30 flex items-center justify-center gap-1.5"
               >
-                <span className="launch-cube">
-                  <span className="launch-face launch-front">
-                    <Check size={16} />
-                    À jour
-                  </span>
-                  <span className="launch-face launch-back">
-                    <Rocket size={16} />
-                    Lancer
-                  </span>
-                </span>
+                <Rocket size={12} />
+                Lancer
               </button>
               <button
                 onClick={handleOpenRepo}
-                className="flex-1 bg-dark-card/60 hover:bg-dark-border/70 border border-dark-border text-gray-300 hover:text-white py-2 px-2 rounded-xl transition-colors duration-300 flex items-center justify-center"
+                className="bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 hover:text-white py-2 px-2.5 rounded-xl transition-colors duration-200 flex items-center justify-center"
                 title="Voir sur GitHub"
+                aria-label="Voir sur GitHub"
               >
-                <ExternalLink size={16} />
+                <ExternalLink size={12} />
               </button>
             </div>
           )}
 
           {!app.downloadUrl && !app.installed && (
-            <div className="flex gap-2">
-              <div className="flex-[3] backdrop-blur-md bg-white/5 border border-white/10 text-gray-500 py-2 px-3 rounded-xl text-xs text-center flex items-center justify-center">
+            <div className="flex gap-1.5">
+              <div className="flex-1 bg-white/5 border border-white/10 text-gray-600 py-2 px-3 rounded-xl text-[11px] text-center flex items-center justify-center">
                 Aucune version disponible
               </div>
               <button
                 onClick={handleOpenRepo}
-                className="flex-1 bg-dark-card/60 hover:bg-dark-border/70 border border-dark-border text-gray-300 hover:text-white py-2 px-2 rounded-xl transition-colors duration-300 flex items-center justify-center"
+                className="bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 hover:text-white py-2 px-2.5 rounded-xl transition-colors duration-200 flex items-center justify-center"
                 title="Voir sur GitHub"
+                aria-label="Voir sur GitHub"
               >
-                <ExternalLink size={16} />
+                <ExternalLink size={12} />
               </button>
             </div>
           )}
+
         </div>
       </div>
     </div>

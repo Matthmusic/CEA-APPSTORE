@@ -17,10 +17,12 @@ export function getAppLogo(appId: string): string | undefined {
 // Couleurs par défaut pour les gradients de fond si pas de logo
 export const APP_COLORS: Record<string, { from: string; to: string }> = {
   listx: { from: '#3B82F6', to: '#1E40AF' },       // Bleu
-  todox: { from: '#10B981', to: '#059669' },       // Vert
-  autonum: { from: '#8B5CF6', to: '#6D28D9' },     // Violet
-  rendexpress: { from: '#EC4899', to: '#BE185D' }, // Rose
-  tontonkad: { from: '#F59E0B', to: '#D97706' },   // Amber/Orange
+  todox: { from: '#10B981', to: '#059669' },        // Vert
+  autonum: { from: '#8B5CF6', to: '#6D28D9' },      // Violet
+  rendexpress: { from: '#EC4899', to: '#BE185D' },  // Rose
+  tontonkad: { from: '#F59E0B', to: '#D97706' },    // Amber
+  caneflow: { from: '#06B6D4', to: '#0E7490' },     // Cyan
+  imgflex: { from: '#F97316', to: '#C2410C' },      // Orange-rouge
 }
 
 export function getAppColor(appId: string): { from: string; to: string } {

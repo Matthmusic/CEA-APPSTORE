@@ -16,6 +16,8 @@ interface AppStoreContextType {
   launchInstalledApp: (app: AppWithStatus) => Promise<void>
   checkForUpdates: () => Promise<void>
   filteredApps: AppWithStatus[]
+  reorderApps: (newOrder: string[]) => void
+  resetOrder: () => void
 }
 
 const AppStoreContext = createContext<AppStoreContextType | undefined>(undefined)
@@ -38,6 +40,24 @@ export function AppStoreProvider({ children }: AppStoreProviderProps) {
   const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState<FilterType>('all')
   const [searchQuery, setSearchQuery] = useState('')
+  const [appOrder, setAppOrder] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('app_order')
+      return saved ? JSON.parse(saved) : []
+    } catch {
+      return []
+    }
+  })
+
+  const reorderApps = (newOrder: string[]) => {
+    setAppOrder(newOrder)
+    localStorage.setItem('app_order', JSON.stringify(newOrder))
+  }
+
+  const resetOrder = () => {
+    setAppOrder([])
+    localStorage.removeItem('app_order')
+  }
 
   // Load catalog on mount
   useEffect(() => {
@@ -261,7 +281,14 @@ export function AppStoreProvider({ children }: AppStoreProviderProps) {
 
       return true
     })
-    .sort((a, b) => a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' }))
+    .sort((a, b) => {
+      const posA = appOrder.indexOf(a.id)
+      const posB = appOrder.indexOf(b.id)
+      if (posA === -1 && posB === -1) return 0
+      if (posA === -1) return 1
+      if (posB === -1) return -1
+      return posA - posB
+    })
 
   const value: AppStoreContextType = {
     apps,
@@ -276,6 +303,8 @@ export function AppStoreProvider({ children }: AppStoreProviderProps) {
     launchInstalledApp,
     checkForUpdates,
     filteredApps,
+    reorderApps,
+    resetOrder,
   }
 
   return <AppStoreContext.Provider value={value}>{children}</AppStoreContext.Provider>

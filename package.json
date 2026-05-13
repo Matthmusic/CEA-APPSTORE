@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "electron:dev": "concurrently \"vite\" \"wait-on tcp:5588 && electron .\"",
+    "electron:dev": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/start-dev.ps1",
     "electron:build": "npm run build && electron-builder",
     "preview": "vite preview"
   },

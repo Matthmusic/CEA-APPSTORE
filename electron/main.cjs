@@ -1,5 +1,4 @@
 const { app, BrowserWindow, ipcMain, nativeTheme, shell } = require('electron')
-const { autoUpdater } = require('electron-updater')
 const path = require('path')
 const fs = require('fs')
 const { spawn } = require('child_process')
@@ -8,6 +7,7 @@ const axios = require('axios')
 // Configuration
 nativeTheme.themeSource = 'dark'
 let mainWindow = null
+let autoUpdater = null
 
 // Paths
 const userDataPath = app.getPath('userData')
@@ -34,6 +34,7 @@ function createWindow() {
     height: 960,
     minWidth: 900,
     minHeight: 600,
+    title: 'CEA AppStore',
     frame: false, // Custom title bar
     backgroundColor: '#0a0a0a',
     icon: path.join(__dirname, '../build/icon.ico'),
@@ -48,7 +49,7 @@ function createWindow() {
   if (app.isPackaged) {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'))
   } else {
-    mainWindow.loadURL('http://localhost:5588')
+    mainWindow.loadURL('http://localhost:5590')
     mainWindow.webContents.openDevTools()
   }
 
@@ -58,16 +59,61 @@ function createWindow() {
   })
 }
 
+function initializeAutoUpdater() {
+  if (!app.isPackaged || autoUpdater) {
+    return
+  }
+
+  ;({ autoUpdater } = require('electron-updater'))
+
+  autoUpdater.autoDownload = false
+  autoUpdater.autoInstallOnAppQuit = true
+
+  autoUpdater.on('update-available', (info) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('update-available', {
+        version: info.version,
+        releaseDate: info.releaseDate,
+        releaseNotes: info.releaseNotes,
+      })
+    }
+  })
+
+  autoUpdater.on('download-progress', (progressObj) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('download-progress', {
+        percent: progressObj.percent,
+        transferred: progressObj.transferred,
+        total: progressObj.total,
+        bytesPerSecond: progressObj.bytesPerSecond,
+      })
+    }
+  })
+
+  autoUpdater.on('update-downloaded', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('update-downloaded')
+    }
+  })
+
+  autoUpdater.on('error', (error) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('update-error', error.message)
+    }
+  })
+}
+
 // ============================================
 // ELECTRON APP LIFECYCLE
 // ============================================
 
 app.whenReady().then(() => {
+  initializeAutoUpdater()
   createWindow()
 
   // Check for updates after 3 seconds (production only)
   setTimeout(() => {
-    if (app.isPackaged) {
+    if (autoUpdater) {
       autoUpdater.checkForUpdates()
     }
   }, 3000)
@@ -82,46 +128,6 @@ app.whenReady().then(() => {
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
-  }
-})
-
-// ============================================
-// AUTO-UPDATER CONFIGURATION
-// ============================================
-
-autoUpdater.autoDownload = false
-autoUpdater.autoInstallOnAppQuit = true
-
-autoUpdater.on('update-available', (info) => {
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.send('update-available', {
-      version: info.version,
-      releaseDate: info.releaseDate,
-      releaseNotes: info.releaseNotes,
-    })
-  }
-})
-
-autoUpdater.on('download-progress', (progressObj) => {
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.send('download-progress', {
-      percent: progressObj.percent,
-      transferred: progressObj.transferred,
-      total: progressObj.total,
-      bytesPerSecond: progressObj.bytesPerSecond,
-    })
-  }
-})
-
-autoUpdater.on('update-downloaded', () => {
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.send('update-downloaded')
-  }
-})
-
-autoUpdater.on('error', (error) => {
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.send('update-error', error.message)
   }
 })
 

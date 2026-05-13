@@ -22,6 +22,7 @@ const REPOS_TO_SCAN = [
   'RENDEXPRESS',
   'TONTONKAD',
   'CaneFlow',
+  'IMGFLEX',
 ]
 
 // Fallback: Liste des apps connues (si pas de cea-app.json)

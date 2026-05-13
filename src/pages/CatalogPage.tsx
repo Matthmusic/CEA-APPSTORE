@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
-import { Filter, RefreshCw, Loader2, AlertCircle } from 'lucide-react'
+import { useEffect, useState, type DragEvent } from 'react'
+import { Filter, RefreshCw, Loader2, AlertCircle, GripVertical, RotateCcw } from 'lucide-react'
 import { useAppStore } from '../context/AppStoreContext'
 import AppCard from '../components/AppCard'
 import EmptyState from '../components/EmptyState'
@@ -20,7 +20,41 @@ export default function CatalogPage({ onRefreshAttentionChange }: CatalogPagePro
     refreshCatalog,
     downloadAndInstallApp,
     launchInstalledApp,
+    reorderApps,
+    resetOrder,
   } = useAppStore()
+
+  const [draggedId, setDraggedId] = useState<string | null>(null)
+  const [dragOverId, setDragOverId] = useState<string | null>(null)
+
+  const canDrag = filter === 'all' && searchQuery.trim() === ''
+
+  const handleDragStart = (id: string) => setDraggedId(id)
+
+  const handleDragOver = (e: DragEvent, id: string) => {
+    e.preventDefault()
+    if (draggedId && draggedId !== id) setDragOverId(id)
+  }
+
+  const handleDragEnd = () => {
+    setDraggedId(null)
+    setDragOverId(null)
+  }
+
+  const handleDrop = (targetId: string) => {
+    if (!draggedId || draggedId === targetId) {
+      handleDragEnd()
+      return
+    }
+    const currentOrder = filteredApps.map(a => a.id)
+    const fromIndex = currentOrder.indexOf(draggedId)
+    const toIndex = currentOrder.indexOf(targetId)
+    const newOrder = [...currentOrder]
+    newOrder.splice(fromIndex, 1)
+    newOrder.splice(toIndex, 0, draggedId)
+    reorderApps(newOrder)
+    handleDragEnd()
+  }
 
   useEffect(() => {
     if (!onRefreshAttentionChange) return
@@ -39,12 +73,12 @@ export default function CatalogPage({ onRefreshAttentionChange }: CatalogPagePro
   return (
     <div className="h-full flex flex-col bg-dark-bg">
       {/* Header */}
-      <div className="px-8 pt-6 pb-4 border-b border-dark-border">
-        <div className="flex flex-col items-center mb-4">
+      <div className="px-8 pt-4 pb-3 border-b border-dark-border">
+        <div className="flex flex-col items-center mb-3">
           <img
             src={ceaLogo}
             alt="CEA AppStore"
-            className="w-64 h-32 opacity-90 mb-3"
+            className="w-48 h-20 opacity-90 mb-2"
           />
           <div className="text-center">
             <h1 className="text-2xl font-bold text-white mb-1">
@@ -96,7 +130,7 @@ export default function CatalogPage({ onRefreshAttentionChange }: CatalogPagePro
               />
             ) : (
               <>
-                <div className="mb-6 flex items-center justify-center gap-4">
+                <div className="mb-4 flex items-center justify-center gap-4">
                   <div className="text-sm text-gray-400 font-medium">
                     {filteredApps.length} application{filteredApps.length > 1 ? 's' : ''} disponible{filteredApps.length > 1 ? 's' : ''}
                   </div>
@@ -109,6 +143,20 @@ export default function CatalogPage({ onRefreshAttentionChange }: CatalogPagePro
                     Actualiser
                   </button>
                 </div>
+                {canDrag && (
+                  <div className="mb-4 flex items-center justify-center gap-2 text-xs text-gray-600">
+                    <GripVertical size={12} />
+                    <span>Glissez les cartes pour réorganiser</span>
+                    <button
+                      onClick={resetOrder}
+                      className="ml-1 flex items-center gap-1 text-gray-600 hover:text-gray-400 transition-colors"
+                      title="Réinitialiser l'ordre"
+                    >
+                      <RotateCcw size={11} />
+                      Réinitialiser
+                    </button>
+                  </div>
+                )}
                 <div className="grid grid-cols-5 gap-6 mx-auto">
                   {filteredApps.map((app) => (
                     <AppCard
@@ -116,6 +164,13 @@ export default function CatalogPage({ onRefreshAttentionChange }: CatalogPagePro
                       app={app}
                       onInstall={downloadAndInstallApp}
                       onLaunch={launchInstalledApp}
+                      draggable={canDrag}
+                      isDragging={draggedId === app.id}
+                      isDragOver={dragOverId === app.id}
+                      onDragStart={() => handleDragStart(app.id)}
+                      onDragOver={(e) => handleDragOver(e, app.id)}
+                      onDragEnd={handleDragEnd}
+                      onDrop={() => handleDrop(app.id)}
                     />
                   ))}
                 </div>
