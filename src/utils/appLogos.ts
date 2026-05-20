@@ -1,12 +1,15 @@
-// Map d'icônes par défaut pour chaque app
-// Les utilisateurs peuvent ajouter leurs propres logos dans src/img/apps/
+import listxLogo from '../img/apps/listx.svg'
+import todoxLogo from '../img/apps/todox.svg'
+import autonumLogo from '../img/apps/autonum.svg'
+import rendexpressLogo from '../img/apps/rendexpress.svg'
+import tontonkadLogo from '../img/apps/tontonkad.svg'
 
 export const APP_LOGOS: Record<string, string> = {
-  listx: '/src/img/apps/listx.svg',
-  todox: '/src/img/apps/todox.svg',
-  autonum: '/src/img/apps/autonum.svg',
-  rendexpress: '/src/img/apps/rendexpress.svg',
-  tontonkad: '/src/img/apps/tontonkad.svg',
+  listx: listxLogo,
+  todox: todoxLogo,
+  autonum: autonumLogo,
+  rendexpress: rendexpressLogo,
+  tontonkad: tontonkadLogo,
 }
 
 // Fallback vers une icône par défaut si le logo n'existe pas
@@ -23,6 +26,8 @@ export const APP_COLORS: Record<string, { from: string; to: string }> = {
   tontonkad: { from: '#F59E0B', to: '#D97706' },    // Amber
   caneflow: { from: '#06B6D4', to: '#0E7490' },     // Cyan
   imgflex: { from: '#F97316', to: '#C2410C' },      // Orange-rouge
+  rackula: { from: '#6366F1', to: '#4338CA' },      // Indigo
+  nexus: { from: '#14B8A6', to: '#0F766E' },        // Teal
 }
 
 export function getAppColor(appId: string): { from: string; to: string } {

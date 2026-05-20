@@ -3,8 +3,12 @@ import type { CeaAppManifest, AppInfo } from '../types'
 import { createDetectionConfig } from './detectionService'
 
 // Utilise un token GitHub si disponible pour augmenter la limite de rate (5000/h au lieu de 60/h)
+// Priorité : localStorage > .env (cohérent avec githubService.ts)
+const getGitHubToken = () =>
+  localStorage.getItem('github_token') || import.meta.env.VITE_GITHUB_TOKEN || undefined
+
 const octokit = new Octokit({
-  auth: import.meta.env.VITE_GITHUB_TOKEN || undefined
+  auth: getGitHubToken()
 })
 
 /**
@@ -75,6 +79,9 @@ export function manifestToAppInfo(
   owner: string,
   repo: string
 ): AppInfo {
+  const logoUrl = manifest.resources?.logo?.url || undefined
+  console.log(`[${manifest.app.name}] logo URL: ${logoUrl ?? '(none)'}`)
+
   return {
     id: manifest.app.id,
     name: manifest.app.name,
@@ -83,7 +90,7 @@ export function manifestToAppInfo(
     repo,
     owner,
     repoUrl: manifest.metadata.repository.url,
-    icon: manifest.resources.logo.url,
+    icon: logoUrl,
     category: manifest.metadata.category,
     latestVersion: manifest.app.version,
     latestReleaseDate: manifest.changelog[manifest.app.version]?.date,

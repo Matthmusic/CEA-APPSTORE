@@ -23,6 +23,8 @@ const REPOS_TO_SCAN = [
   'TONTONKAD',
   'CaneFlow',
   'IMGFLEX',
+  'RACKULA',
+  'NEXUS',
 ]
 
 // Fallback: Liste des apps connues (si pas de cea-app.json)
@@ -66,6 +68,22 @@ const KNOWN_APPS = [
     category: 'Professionnel',
     description: 'Simulation et optimisation de fourreaux électriques multitubulaires',
     shortDescription: 'Dimensionnement de chemins de câbles avec rendu 2D'
+  },
+  {
+    id: 'rackula',
+    repo: 'RACKULA',
+    name: 'RACKULA',
+    category: 'Productivité',
+    description: 'Application de gestion et organisation pour la productivité',
+    shortDescription: 'Gestion et organisation pour la productivité'
+  },
+  {
+    id: 'nexus',
+    repo: 'NEXUS',
+    name: 'NEXUS',
+    category: 'Utilitaires',
+    description: 'Utilitaire polyvalent pour les besoins du quotidien',
+    shortDescription: 'Utilitaire polyvalent'
   },
 ]
 

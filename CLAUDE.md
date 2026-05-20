@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commandes de développement
 
 ```bash
-# Démarrer le serveur Vite seul (frontend React sur http://localhost:5588)
+# Démarrer le serveur Vite seul (frontend React sur http://localhost:5590)
 npm run dev
 
 # Démarrer l'appli Electron complète en mode dev (Vite + Electron avec DevTools)
@@ -47,7 +47,7 @@ L'appli suit l'architecture sécurisée d'Electron avec une séparation stricte 
 
 ### Flux de données : comment les applis arrivent dans le catalogue
 
-1. `githubService.ts` — Utilise `@octokit/rest` pour interroger l'API GitHub sur les releases sous l'orga `@Matthmusic`. Liste des repos hardcodée : `ListX`, `To-DoX`, `AUTONUM`, `RENDEXPRESS`, `TONTONKAD`, `CaneFlow`. Un token GitHub (stocké en `localStorage`) évite le rate limiting.
+1. `githubService.ts` — Utilise `@octokit/rest` pour interroger l'API GitHub sur les releases sous l'orga `@Matthmusic`. Liste des repos hardcodée : `ListX`, `To-DoX`, `AUTONUM`, `RENDEXPRESS`, `TONTONKAD`, `CaneFlow`, `IMGFLEX`. Un token GitHub (stocké en `localStorage`) évite le rate limiting.
 2. Pour chaque repo, il essaie de récupérer un manifeste `cea-app.json` à la racine du repo (essayé sur `main`, puis `master`). Ce manifeste (`cea-app-template.json` documente le schéma) fournit les métadonnées, la config de détection, les URLs de logos, etc. Si aucun manifeste n'existe, un fallback hardcodé dans `KNOWN_APPS` est utilisé.
 3. `ceaAppService.ts` parse le manifeste en type `AppInfo`.
 4. Dans le renderer, `AppStoreContext.tsx` appelle `window.electronAPI.getInstalledApps()` pour croiser le catalogue avec ce qui est réellement installé, produisant `AppWithStatus[]` utilisé partout dans l'UI.
@@ -100,4 +100,4 @@ Chaque appli gérée livre son propre `cea-app.json` à la racine de son repo Gi
 - **L'expansion des vars d'env est manuelle.** Les chemins issus des configs de détection `cea-app.json` contiennent des vars d'env Windows (`%APPDATA%` etc.). La fonction `expandEnvPath()` dans `main.cjs` et `detectionService.ts` s'en charge — ne pas utiliser les chemins bruts directement.
 - **Le token GitHub est optionnel mais important.** Sans lui, le rate limit de l'API GitHub (60 req/h non authentifié) sera atteint rapidement en dev. Le définir via le modal Paramètres dans l'appli ; il est stocké en `localStorage`.
 - **Les fichiers `electron/` sont CommonJS (`.cjs`).** Le `"type": "commonjs"` dans `package.json` s'en occupe. Le code React dans `src/` est ESM, géré par Vite.
-- **Le port du serveur Vite est fixé à 5588** (`strictPort: true`). `electron:dev` utilise `wait-on tcp:5588` pour savoir quand lancer Electron.
+- **Le port du serveur Vite est fixé à 5590** (`strictPort: true`). `electron:dev` utilise `wait-on tcp:5590` pour savoir quand lancer Electron.

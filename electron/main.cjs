@@ -22,6 +22,8 @@ const appNameMapping = {
   'rendexpress': 'rendexpress',
   'tontonkad': 'tontonkad',
   'caneflow': 'caneflow',
+  'rackula': 'rackula',
+  'nexus': 'nexus',
 }
 
 // ============================================
@@ -31,7 +33,7 @@ const appNameMapping = {
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1440,
-    height: 960,
+    height: 1080,
     minWidth: 900,
     minHeight: 600,
     title: 'CEA AppStore',

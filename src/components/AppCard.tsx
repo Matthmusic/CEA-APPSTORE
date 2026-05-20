@@ -22,9 +22,18 @@ export default function AppCard({
   draggable: isDraggable, isDragging, isDragOver,
   onDragStart, onDragOver, onDragEnd, onDrop,
 }: AppCardProps) {
-  const [logoError, setLogoError] = useState(false)
   const appColor = getAppColor(app.id)
-  const appLogo = app.icon || getAppLogo(app.id)
+  const localLogo = getAppLogo(app.id)
+  const [logoSrc, setLogoSrc] = useState<string | undefined>(app.icon || localLogo)
+  const [logoError, setLogoError] = useState(false)
+
+  const handleLogoError = () => {
+    if (localLogo && logoSrc !== localLogo) {
+      setLogoSrc(localLogo)
+    } else {
+      setLogoError(true)
+    }
+  }
 
   const handleInstall = () => { if (!app.isDownloading) onInstall(app) }
   const handleOpenRepo = () => { window.electronAPI.openExternal(app.repoUrl) }
@@ -52,32 +61,32 @@ export default function AppCard({
 
         {/* ── LOGO BANNER ─────────────────────────────── */}
         <div
-          className="relative h-36 flex items-center justify-center overflow-hidden"
+          className="relative h-44 flex items-center justify-center overflow-hidden"
           style={{
             background: `linear-gradient(135deg, ${appColor.from}28 0%, ${appColor.to}18 100%)`,
           }}
         >
           {/* Ambient glow behind logo */}
           <div
-            className="absolute w-28 h-28 rounded-full blur-3xl opacity-35 pointer-events-none"
+            className="absolute w-40 h-40 rounded-full blur-3xl opacity-35 pointer-events-none"
             style={{ background: `radial-gradient(circle, ${appColor.from} 0%, transparent 70%)` }}
           />
 
           {/* Logo container */}
           <div
-            className="relative z-10 w-20 h-20 rounded-2xl flex items-center justify-center overflow-hidden border border-white/10 shadow-2xl"
+            className="relative z-10 w-[120px] h-[120px] rounded-2xl flex items-center justify-center overflow-hidden border border-white/10 shadow-2xl"
             style={{
-              background: logoError || !appLogo
+              background: logoError || !logoSrc
                 ? `linear-gradient(135deg, ${appColor.from} 0%, ${appColor.to} 100%)`
                 : 'rgba(255,255,255,0.05)',
             }}
           >
-            {appLogo && !logoError ? (
+            {logoSrc && !logoError ? (
               <img
-                src={appLogo}
+                src={logoSrc}
                 alt={app.name}
                 className="w-full h-full object-contain p-2.5"
-                onError={() => setLogoError(true)}
+                onError={handleLogoError}
               />
             ) : (
               <span className="text-3xl font-bold text-white/50">{app.name.charAt(0)}</span>
@@ -112,18 +121,13 @@ export default function AppCard({
         {/* ── INFO SECTION ────────────────────────────── */}
         <div className="px-4 pt-3 pb-4">
 
-          {/* Name */}
-          <h3 className="text-sm font-bold text-white leading-tight truncate mb-0.5">
+          {/* Name + Version */}
+          <h3 className="text-sm font-bold text-white leading-tight truncate text-center mb-0.5">
             {app.name}
           </h3>
-
-          {/* Category + Version inline */}
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] text-gray-500">{app.category}</span>
-            <span className="text-[11px] font-mono font-semibold text-primary/70">
-              {app.latestVersion || 'N/A'}
-            </span>
-          </div>
+          <p className="text-[11px] font-mono font-semibold text-primary/70 text-center mb-2">
+            {app.latestVersion || 'N/A'}
+          </p>
 
           {/* Description (1 line) or Download progress */}
           {app.isDownloading ? (
