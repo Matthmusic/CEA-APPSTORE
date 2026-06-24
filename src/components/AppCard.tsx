@@ -183,7 +183,7 @@ export default function AppCard({
               <button
                 onClick={handleInstall}
                 disabled={app.isDownloading}
-                className="flex-1 bg-gradient-to-r from-primary to-primary-light hover:opacity-90 text-black text-xs font-bold py-2 px-3 rounded-xl transition-all duration-200 hover:shadow-md hover:shadow-primary/30 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+                className="flex-1 bg-gradient-to-r from-purple-600 to-purple-400 hover:opacity-90 text-white text-xs font-bold py-2 px-3 rounded-xl transition-all duration-200 hover:shadow-md hover:shadow-purple-500/30 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
               >
                 <RefreshCw size={12} />
                 {app.isDownloading ? 'Téléchargement…' : 'Mettre à jour'}
