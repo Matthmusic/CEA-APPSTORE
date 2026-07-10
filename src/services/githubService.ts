@@ -1,5 +1,5 @@
 import { Octokit } from '@octokit/rest'
-import type { AppInfo, GitHubRepo, GitHubRelease } from '../types'
+import type { AppInfo, GitHubRelease } from '../types'
 import { fetchCeaAppManifestAuto, manifestToAppInfo } from './ceaAppService'
 
 // Utilise un token GitHub si disponible pour augmenter la limite de rate (5000/h au lieu de 60/h)
@@ -86,23 +86,6 @@ const KNOWN_APPS = [
     shortDescription: 'Utilitaire polyvalent'
   },
 ]
-
-/**
- * Fetch all public repos from Matthmusic
- */
-export async function fetchAllRepos(): Promise<GitHubRepo[]> {
-  try {
-    const { data } = await octokit.repos.listForUser({
-      username: GITHUB_OWNER,
-      type: 'all',
-      per_page: 100,
-    })
-    return data as GitHubRepo[]
-  } catch (error) {
-    console.error('Error fetching repos:', error)
-    throw error
-  }
-}
 
 /**
  * Fetch latest release for a specific repo
@@ -230,26 +213,3 @@ export async function checkForAppUpdate(repo: string, currentVersion: string): P
   }
 }
 
-/**
- * Format file size to human readable
- */
-export function formatFileSize(bytes?: number): string {
-  if (!bytes) return 'N/A'
-
-  const mb = bytes / (1024 * 1024)
-  return `${mb.toFixed(1)} MB`
-}
-
-/**
- * Format release date
- */
-export function formatReleaseDate(dateString?: string): string {
-  if (!dateString) return 'N/A'
-
-  const date = new Date(dateString)
-  return new Intl.DateTimeFormat('fr-FR', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-  }).format(date)
-}

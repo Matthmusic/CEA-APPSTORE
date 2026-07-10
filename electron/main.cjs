@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, nativeTheme, shell } = require('electron')
+const { app, BrowserWindow, ipcMain, nativeTheme, shell, session } = require('electron')
 const path = require('path')
 const fs = require('fs')
 const { spawn } = require('child_process')
@@ -110,6 +110,23 @@ function initializeAutoUpdater() {
 // ============================================
 
 app.whenReady().then(() => {
+  if (app.isPackaged) {
+    session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+      callback({
+        responseHeaders: {
+          ...details.responseHeaders,
+          'Content-Security-Policy': [
+            "default-src 'self'; " +
+            "style-src 'self' 'unsafe-inline'; " +
+            "img-src 'self' data: https:; " +
+            "connect-src 'self' https://api.github.com https://raw.githubusercontent.com https://github.com; " +
+            "font-src 'self' data:"
+          ]
+        }
+      })
+    })
+  }
+
   initializeAutoUpdater()
   createWindow()
 

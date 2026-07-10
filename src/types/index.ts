@@ -15,16 +15,6 @@ export interface GitHubAsset {
   content_type: string
 }
 
-export interface GitHubRepo {
-  id: number
-  name: string
-  full_name: string
-  description: string | null
-  html_url: string
-  topics: string[]
-  updated_at: string
-  private: boolean
-}
 
 export interface AppInfo {
   id: string
