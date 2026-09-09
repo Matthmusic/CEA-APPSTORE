@@ -5,9 +5,11 @@ import CatalogPage from './pages/CatalogPage'
 import UpdateNotification from './components/UpdateNotification'
 import TicketReporter from './components/TicketReporter'
 import SettingsModal from './components/SettingsModal'
+import type { AppWithStatus } from './types'
 import logoIcon from './img/ICO-CEA-APPTSTORE.svg'
 
 function App() {
+  const [ticketApp, setTicketApp] = useState<AppWithStatus | null>(null)
   const [appVersion, setAppVersion] = useState<string>('')
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [githubToken, setGithubToken] = useState('')
@@ -109,7 +111,7 @@ function App() {
 
         {/* Main Content */}
         <div className="flex-1 overflow-hidden">
-          <CatalogPage onRefreshAttentionChange={setRefreshAttention} />
+          <CatalogPage onReportTicket={setTicketApp} onRefreshAttentionChange={setRefreshAttention} />
         </div>
 
         {/* Update Notification */}
@@ -117,6 +119,9 @@ function App() {
 
         {/* Ticket Reporter - Bouton Signaler un problème */}
         <TicketReporter
+          requestedApp={ticketApp}
+          onRequestHandled={() => setTicketApp(null)}
+          onOpenSettings={() => setSettingsOpen(true)}
           appName="CEA-APPSTORE"
           appVersion={appVersion}
           githubToken={githubToken}

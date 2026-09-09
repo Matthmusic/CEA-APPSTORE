@@ -1,15 +1,17 @@
 import { useEffect, useState, type DragEvent } from 'react'
 import { Filter, RefreshCw, Loader2, AlertCircle, GripVertical, RotateCcw } from 'lucide-react'
 import { useAppStore } from '../context/AppStoreContext'
+import type { AppWithStatus } from '../types'
 import AppCard from '../components/AppCard'
 import EmptyState from '../components/EmptyState'
 import ceaLogo from '../img/CEA-APPSTOREBLANC.svg'
 
 interface CatalogPageProps {
+  onReportTicket?: (app: AppWithStatus) => void
   onRefreshAttentionChange?: (needsAttention: boolean) => void
 }
 
-export default function CatalogPage({ onRefreshAttentionChange }: CatalogPageProps) {
+export default function CatalogPage({ onRefreshAttentionChange, onReportTicket }: CatalogPageProps) {
   const {
     apps,
     filteredApps,
@@ -164,6 +166,7 @@ export default function CatalogPage({ onRefreshAttentionChange }: CatalogPagePro
                       app={app}
                       onInstall={downloadAndInstallApp}
                       onLaunch={launchInstalledApp}
+                  onReportTicket={onReportTicket}
                       draggable={canDrag}
                       isDragging={draggedId === app.id}
                       isDragOver={dragOverId === app.id}

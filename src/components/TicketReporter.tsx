@@ -1,8 +1,12 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import type { AppWithStatus } from '../types';
 import { Octokit } from '@octokit/rest';
 import { useAppStore } from '../context/AppStoreContext';
 
 interface TicketReporterProps {
+  requestedApp?: AppWithStatus | null;
+  onRequestHandled?: () => void;
+  onOpenSettings?: () => void;
   appName: string;
   appVersion: string;
   githubToken: string;
@@ -13,6 +17,7 @@ interface TicketReporterProps {
 }
 
 export const TicketReporter: React.FC<TicketReporterProps> = ({
+  requestedApp, onRequestHandled, onOpenSettings,
   appName,
   appVersion,
   githubToken,
@@ -24,7 +29,8 @@ export const TicketReporter: React.FC<TicketReporterProps> = ({
   const { apps } = useAppStore();
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [success, setSuccess] = useState<string | null>(null);
+  const submitting = useRef(false);
   const [error, setError] = useState<string | null>(null);
 
   const sortedApps = useMemo(
@@ -42,15 +48,20 @@ export const TicketReporter: React.FC<TicketReporterProps> = ({
     logs: '',
   });
 
-  // Mettre à jour la version quand appVersion change
   useEffect(() => {
-    if (appVersion && formData.selectedApp === appName) {
-      setFormData(prev => ({
-        ...prev,
-        selectedVersion: appVersion,
-      }));
-    }
+    setFormData(prev => prev.selectedApp === appName ? { ...prev, selectedVersion: appVersion } : prev);
   }, [appVersion, appName]);
+
+  useEffect(() => {
+    if (!requestedApp) return;
+    setFormData(prev => ({ ...prev, selectedApp: requestedApp.name, selectedVersion: requestedApp.currentVersion || requestedApp.latestVersion || 'N/A' }));
+    setSuccess(null);
+    setError(null);
+    setIsOpen(true);
+    onRequestHandled?.();
+  }, [requestedApp, onRequestHandled]);
+
+  const close = () => { if (!submitting.current) { setIsOpen(false); setSuccess(null); } };
 
   const positionClasses = {
     'bottom-right': 'bottom-6 right-6',
@@ -61,6 +72,10 @@ export const TicketReporter: React.FC<TicketReporterProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting.current) return;
+    if (!githubToken.trim()) { setError('Configurez votre token GitHub dans les paramètres pour envoyer un ticket.'); return; }
+    if (!formData.title.trim() || !formData.description.trim()) { setError('Renseignez un titre et une description.'); return; }
+    submitting.current = true;
     setIsSubmitting(true);
     setError(null);
 
@@ -69,7 +84,7 @@ export const TicketReporter: React.FC<TicketReporterProps> = ({
 
       const timestamp = new Date().toISOString();
 
-      const issueTitle = `[${formData.selectedApp} v${formData.selectedVersion}] ${formData.title}`;
+      const issueTitle = `[${formData.selectedApp} v${formData.selectedVersion.trim().replace(/^v/, '') || 'N/A'}] ${formData.title}`;
       const issueBody = `## Description
 
 ${formData.description}
@@ -100,7 +115,7 @@ ${formData.logs}
         'status:open',
       ];
 
-      await octokit.rest.issues.create({
+      const { data: issue } = await octokit.rest.issues.create({
         owner: githubOwner,
         repo: githubRepo,
         title: issueTitle,
@@ -108,24 +123,17 @@ ${formData.logs}
         labels,
       });
 
-      setSuccess(true);
-      setTimeout(() => {
-        setSuccess(false);
-        setIsOpen(false);
-        setFormData({
-          selectedApp: appName,
-          selectedVersion: appVersion,
-          type: 'bug',
-          priority: 'medium',
-          title: '',
-          description: '',
-          logs: '',
-        });
-      }, 2000);
+      setSuccess(issue.html_url);
+      setFormData(prev => ({ ...prev, title: '', description: '', logs: '' }));
     } catch (err) {
-      setError('Impossible de créer le ticket. Vérifiez votre connexion.');
-      console.error(err);
+      const status = (err as { status?: number }).status;
+      setError(status === 401 ? 'Token GitHub invalide ou expiré. Mettez-le à jour dans les paramètres.'
+        : status === 403 ? 'GitHub refuse cet envoi : vérifiez les droits Issues en écriture et la limite de requêtes.'
+        : status === 404 ? 'Dépôt de tickets inaccessible. Vérifiez les droits du token sur CEA-APPSTORE-TICKETS.'
+        : status === 422 ? 'GitHub refuse les données du ticket. Vérifiez les champs et les labels du dépôt.'
+        : 'Envoi non confirmé. Vérifiez les tickets avant de réessayer pour éviter un doublon. Votre saisie est conservée.');
     } finally {
+      submitting.current = false;
       setIsSubmitting(false);
     }
   };
@@ -158,14 +166,15 @@ ${formData.logs}
       {/* Modal */}
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-          <div className="bg-dark-card rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-dark-border">
+          <div role="dialog" aria-modal="true" aria-label="Signaler un problème" className="bg-dark-card rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-dark-border">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-white">
                   Signaler un problème
                 </h2>
                 <button
-                  onClick={() => setIsOpen(false)}
+                  aria-label="Fermer"
+                  onClick={close} disabled={isSubmitting}
                   className="text-gray-400 hover:text-white transition-colors"
                 >
                   <svg
@@ -205,11 +214,17 @@ ${formData.logs}
                     Ticket créé avec succès !
                   </h3>
                   <p className="text-gray-400">
-                    Nous avons bien reçu votre signalement.
+                    Le ticket est disponible dans TicketX.
+                    <button type="button" className="block mx-auto mt-4 text-primary underline" onClick={() => window.electronAPI.openExternal(success)}>Ouvrir le ticket</button>
                   </p>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-4">
+                  {!githubToken.trim() && <p className="text-amber-300 text-sm">Un token GitHub est nécessaire pour envoyer un ticket.</p>}
+                  <div className="flex gap-4 text-sm text-primary">
+                    <button type="button" onClick={() => { close(); onOpenSettings?.(); }}>Paramètres GitHub</button>
+                    <button type="button" onClick={() => window.electronAPI.openExternal('https://github.com/' + githubOwner + '/' + githubRepo + '/issues')}>Consulter les tickets</button>
+                  </div>
                   {error && (
                     <div className="bg-red-500/20 border border-red-500 rounded-lg p-4 text-red-400">
                       {error}
@@ -227,7 +242,7 @@ ${formData.logs}
                         setFormData({
                           ...formData,
                           selectedApp: e.target.value,
-                          selectedVersion: selectedAppData?.currentVersion || selectedAppData?.latestVersion || 'N/A',
+                          selectedVersion: e.target.value === appName ? appVersion : selectedAppData?.currentVersion || selectedAppData?.latestVersion || 'N/A',
                         });
                       }}
                       className="w-full px-4 py-2 bg-dark-bg border border-dark-border rounded-lg text-white focus:outline-none focus:border-primary"
@@ -241,6 +256,10 @@ ${formData.logs}
                     </select>
                   </div>
 
+                  <label className="block text-white">Version concernée
+                    <input aria-label="Version concernée" value={formData.selectedVersion} maxLength={80} onChange={e => setFormData({ ...formData, selectedVersion: e.target.value })} className="mt-2 w-full px-4 py-2 bg-dark-bg border border-dark-border rounded-lg" />
+                    <span className="text-xs text-gray-400">Vérifiez la version installée, y compris le suffixe bêta ou dev.</span>
+                  </label>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-white font-medium mb-2">
@@ -344,14 +363,14 @@ ${formData.logs}
                   <div className="flex items-center justify-end space-x-4 pt-4">
                     <button
                       type="button"
-                      onClick={() => setIsOpen(false)}
+                      onClick={close} disabled={isSubmitting}
                       className="px-6 py-2 border border-dark-border rounded-lg hover:bg-dark-bg transition-colors text-white"
                     >
                       Annuler
                     </button>
                     <button
                       type="submit"
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || !githubToken.trim()}
                       className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isSubmitting ? 'Envoi...' : 'Envoyer'}

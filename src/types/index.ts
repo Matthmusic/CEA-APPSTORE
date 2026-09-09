@@ -1,4 +1,6 @@
 export interface GitHubRelease {
+  draft: boolean
+  prerelease: boolean
   id: number
   tag_name: string
   name: string
@@ -26,6 +28,7 @@ export interface AppInfo {
   repoUrl: string
   icon?: string
   category: string
+  betaVersion?: string
   latestVersion?: string
   latestReleaseDate?: string
   downloadUrl?: string

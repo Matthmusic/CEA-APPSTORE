@@ -23,7 +23,7 @@ jobs:
           cache: 'npm'
 
       - name: Cache Electron
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~\AppData\Local\electron\Cache
@@ -35,16 +35,25 @@ jobs:
       - name: Install dependencies
         run: npm ci --fund=false --audit=false
 
+      - name: Validate CEA release channel
+        run: node scripts/release-channel.cjs
+
       - name: Build application
-        run: npm run electron:build
+        run: npm run electron:build -- --publish never
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload release assets
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: release/*
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          make_latest: ${{ contains(github.ref_name, '-') && 'false' || 'true' }}
+          fail_on_unmatched_files: true
+          files: |
+            release/*.exe
+            release/*.blockmap
+            release/latest.yml
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,7 +1,7 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react'
 import type { AppWithStatus, FilterType } from '../types'
 import { buildAppCatalog, checkForAppUpdate } from '../services/githubService'
-import * as semver from 'semver'
+import { shouldProposeUpdate } from '../services/releasePolicy'
 
 interface AppStoreContextType {
   apps: AppWithStatus[]
@@ -36,6 +36,8 @@ interface AppStoreProviderProps {
 
 export function AppStoreProvider({ children }: AppStoreProviderProps) {
   const [apps, setApps] = useState<AppWithStatus[]>([])
+  const appsRef = useRef(apps)
+  useEffect(() => { appsRef.current = apps }, [apps])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState<FilterType>('all')
@@ -112,19 +114,7 @@ export function AppStoreProvider({ children }: AppStoreProviderProps) {
           const installedInfo = installedData.apps[app.id]
           const installed = !!installedInfo
 
-          let canUpdate = false
-          if (installed && app.latestVersion && installedInfo.version) {
-            // Compare versions using semver
-            const current = semver.clean(installedInfo.version)
-            const latest = semver.clean(app.latestVersion)
-
-            if (current && latest) {
-              canUpdate = semver.gt(latest, current)
-              console.log(`[${app.id}] Version check: current=${current}, latest=${latest}, canUpdate=${canUpdate}`)
-            } else {
-              console.warn(`[${app.id}] Could not clean versions: current=${installedInfo.version}, latest=${app.latestVersion}`)
-            }
-          }
+          const canUpdate = installed && !!app.latestVersion && shouldProposeUpdate(installedInfo.version, app.latestVersion)
 
           return {
             ...app,
@@ -154,28 +144,21 @@ export function AppStoreProvider({ children }: AppStoreProviderProps) {
     try {
       const installedData = await window.electronAPI.getInstalledApps()
 
-      const updatedApps = await Promise.all(
-        apps.map(async (app) => {
-          const installedInfo = installedData.apps[app.id]
-          if (!installedInfo || !app.repo) return app
-
-          const updateInfo = await checkForAppUpdate(app.repo, installedInfo.version)
-
-          if (updateInfo.hasUpdate) {
-            return {
-              ...app,
-              latestVersion: updateInfo.latestVersion,
-              downloadUrl: updateInfo.downloadUrl,
-              releaseNotes: updateInfo.releaseNotes,
-              canUpdate: true,
-            }
-          }
-
-          return app
-        })
-      )
-
-      setApps(updatedApps)
+      const results = await Promise.all(appsRef.current.map(async app => {
+        const installedInfo = installedData.apps[app.id]
+        if (!installedInfo || !app.repo || app.isDownloading) return null
+        const update = await checkForAppUpdate(app.repo, installedInfo.version)
+        return { id: app.id, version: installedInfo.version, update }
+      }))
+      setApps(previous => previous.map(app => {
+        const result = results.find(item => item?.id === app.id)
+        // Do not overwrite a concurrent installation or a newly selected version.
+        if (!result || app.isDownloading || app.currentVersion !== result.version) return app
+        return result.update.hasUpdate
+          ? { ...app, latestVersion: result.update.latestVersion, downloadUrl: result.update.downloadUrl,
+              releaseNotes: result.update.releaseNotes, canUpdate: true }
+          : { ...app, canUpdate: false }
+      }))
     } catch (err) {
       console.error('Error checking for updates:', err)
     }
@@ -225,7 +208,7 @@ export function AppStoreProvider({ children }: AppStoreProviderProps) {
                 ...a,
                 installed: true,
                 currentVersion: app.latestVersion,
-                canUpdate: false,
+                canUpdate: !!a.latestVersion && shouldProposeUpdate(app.latestVersion || '', a.latestVersion),
                 isDownloading: false,
                 downloadProgress: 100,
               }

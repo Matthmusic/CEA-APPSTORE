@@ -1,13 +1,15 @@
-import { useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import type { DragEvent } from 'react'
-import { Download, Check, RefreshCw, ExternalLink, Rocket, GripVertical } from 'lucide-react'
+import { Download, Check, RefreshCw, ExternalLink, Rocket, GripVertical, MoreHorizontal, MessageSquarePlus, Tickets } from 'lucide-react'
 import type { AppWithStatus } from '../types'
 import { getAppColor, getAppLogo } from '../utils/appLogos'
+import ReleaseChannelSelector from './ReleaseChannelSelector'
 
 interface AppCardProps {
   app: AppWithStatus
   onInstall: (app: AppWithStatus) => void
   onLaunch: (app: AppWithStatus) => void
+  onReportTicket?: (app: AppWithStatus) => void
   draggable?: boolean
   isDragging?: boolean
   isDragOver?: boolean
@@ -18,10 +20,35 @@ interface AppCardProps {
 }
 
 export default function AppCard({
-  app, onInstall, onLaunch,
+  app, onInstall, onLaunch, onReportTicket,
   draggable: isDraggable, isDragging, isDragOver,
   onDragStart, onDragOver, onDragEnd, onDrop,
 }: AppCardProps) {
+  const [supportOpen, setSupportOpen] = useState(false)
+  const supportRef = useRef<HTMLDivElement>(null)
+  const supportButton = useRef<HTMLButtonElement>(null)
+  const supportId = useId()
+
+  useEffect(() => {
+    if (!supportOpen) return
+    supportRef.current?.querySelector<HTMLButtonElement>('[data-support-action]')?.focus()
+    const dismiss = (event: PointerEvent) => {
+      if (!supportRef.current?.contains(event.target as Node)) setSupportOpen(false)
+    }
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setSupportOpen(false)
+        supportButton.current?.focus()
+      }
+    }
+    document.addEventListener('pointerdown', dismiss)
+    document.addEventListener('keydown', escape)
+    return () => {
+      document.removeEventListener('pointerdown', dismiss)
+      document.removeEventListener('keydown', escape)
+    }
+  }, [supportOpen])
+
   const appColor = getAppColor(app.id)
   const localLogo = getAppLogo(app.id)
   const [logoSrc, setLogoSrc] = useState<string | undefined>(app.icon || localLogo)
@@ -93,8 +120,34 @@ export default function AppCard({
             )}
           </div>
 
+          <div ref={supportRef} className="absolute top-2 right-2 z-30"
+            onPointerDown={event => event.stopPropagation()}
+            onDragStart={event => event.stopPropagation()}
+            onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node)) setSupportOpen(false) }}>
+            <button ref={supportButton} type="button" aria-label={`Assistance pour ${app.name}`} title="Assistance"
+              aria-expanded={supportOpen} aria-controls={supportId}
+              onClick={() => setSupportOpen(open => !open)}
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-300 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+              <MoreHorizontal size={18} aria-hidden="true" />
+            </button>
+            {supportOpen && (
+              <div id={supportId} className="absolute right-0 top-10 w-52 rounded-xl border border-dark-border bg-dark-card p-1 shadow-lg">
+                <button data-support-action type="button" disabled={!onReportTicket}
+                  onClick={() => { setSupportOpen(false); onReportTicket?.(app) }}
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-xs text-gray-200 hover:bg-primary/10 hover:text-primary focus-visible:bg-primary/10 focus-visible:text-primary focus-visible:outline-none disabled:opacity-40">
+                  <MessageSquarePlus size={14} aria-hidden="true" /> Signaler un problème
+                </button>
+                <button data-support-action type="button"
+                  onClick={() => { setSupportOpen(false); supportButton.current?.focus(); void window.electronAPI.openExternal('https://github.com/Matthmusic/CEA-APPSTORE-TICKETS/issues?q=' + encodeURIComponent('is:issue label:"app:' + app.name + '"')) }}
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-xs text-gray-200 hover:bg-primary/10 hover:text-primary focus-visible:bg-primary/10 focus-visible:text-primary focus-visible:outline-none">
+                  <Tickets size={14} aria-hidden="true" /> Voir les tickets
+                </button>
+              </div>
+            )}
+          </div>
+
           {/* Status badges – top-right */}
-          <div className="absolute top-2.5 right-2.5 z-20 flex gap-1.5">
+          <div className="absolute top-4 right-12 z-20 flex gap-1.5">
             {app.installed && (
               <div className="bg-green-500/20 border border-green-500/30 text-green-400 p-1 rounded-full shadow-md">
                 <Check size={10} />
@@ -128,6 +181,12 @@ export default function AppCard({
           <p className="text-[11px] font-mono font-semibold text-primary/70 text-center mb-2">
             {app.latestVersion || 'N/A'}
           </p>
+
+          {app.betaVersion && (
+            <p className="mb-3 text-center text-[11px] text-violet-300" title="Version de test accessible dans le sélecteur de canal, sur demande uniquement.">
+              Bêta disponible · {app.betaVersion}
+            </p>
+          )}
 
           {/* Description (1 line) or Download progress */}
           {app.isDownloading ? (
@@ -234,6 +293,8 @@ export default function AppCard({
               </button>
             </div>
           )}
+
+          <ReleaseChannelSelector app={app} onInstall={onInstall} />
 
         </div>
       </div>

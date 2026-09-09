@@ -1,6 +1,7 @@
 import { Octokit } from '@octokit/rest'
 import type { AppInfo, GitHubRelease } from '../types'
 import { fetchCeaAppManifestAuto, manifestToAppInfo } from './ceaAppService'
+import { availableBetaVersion, installerAsset, selectRelease, shouldProposeUpdate, type ReleaseChannel } from './releasePolicy'
 
 // Utilise un token GitHub si disponible pour augmenter la limite de rate (5000/h au lieu de 60/h)
 // Priorité : localStorage > .env
@@ -87,16 +88,28 @@ const KNOWN_APPS = [
   },
 ]
 
-/**
- * Fetch latest release for a specific repo
- */
+const releaseCache = new Map<string, { expires: number; request: Promise<GitHubRelease[]> }>()
+
+/** Fetch release metadata only; experimental installation always needs explicit selection. */
+export async function fetchChannelRelease(repo: string, channel: ReleaseChannel, owner = GITHUB_OWNER): Promise<GitHubRelease | null> {
+  const key = owner + '/' + repo
+  let cached = releaseCache.get(key)
+  if (!cached || cached.expires <= Date.now()) {
+    const request = octokit.paginate(octokit.repos.listReleases, { owner, repo, per_page: 100 }) as Promise<GitHubRelease[]>
+    cached = { expires: Date.now() + 300000, request }
+    releaseCache.set(key, cached)
+    request.catch(() => { if (releaseCache.get(key)?.request === request) releaseCache.delete(key) })
+  }
+  return selectRelease(await cached.request, channel)
+}
+
 export async function fetchLatestRelease(repo: string): Promise<GitHubRelease | null> {
   try {
     const { data } = await octokit.repos.getLatestRelease({
       owner: GITHUB_OWNER,
       repo,
     })
-    return data as GitHubRelease
+    return selectRelease([data as GitHubRelease], 'stable')
   } catch (error) {
     // No releases found
     if ((error as any).status === 404) {
@@ -122,7 +135,13 @@ export async function buildAppCatalog(): Promise<AppInfo[]> {
       if (manifest) {
         // Utilise les infos du manifest
         const appInfo = manifestToAppInfo(manifest, GITHUB_OWNER, repo)
-        apps.push(appInfo)
+        // A manifest on main can describe an unreleased/dev build. Releases alone
+        // decide which installer is offered by default.
+        const stable = await fetchLatestRelease(repo).catch(() => null)
+        const beta = await fetchChannelRelease(repo, 'beta').catch(() => null)
+        const asset = stable ? installerAsset(stable) : undefined
+        apps.push({ ...appInfo, betaVersion: availableBetaVersion(beta?.tag_name, stable?.tag_name), latestVersion: stable?.tag_name, downloadUrl: asset?.browser_download_url,
+          latestReleaseDate: stable?.published_at, releaseNotes: stable?.body, fileSize: asset?.size })
         console.log(`✓ Loaded ${repo} from cea-app.json manifest`)
       } else {
         // Fallback: utilise les infos hardcodées + fetch release
@@ -131,9 +150,8 @@ export async function buildAppCatalog(): Promise<AppInfo[]> {
 
         if (knownApp) {
           const release = await fetchLatestRelease(repo)
-          const exeAsset = release?.assets.find(asset =>
-            asset.name.endsWith('.exe') && !asset.name.includes('blockmap')
-          )
+          const beta = await fetchChannelRelease(repo, 'beta').catch(() => null)
+          const exeAsset = release ? installerAsset(release) : undefined
 
           apps.push({
             id: knownApp.id,
@@ -144,6 +162,7 @@ export async function buildAppCatalog(): Promise<AppInfo[]> {
             owner: GITHUB_OWNER,
             repoUrl: `https://github.com/${GITHUB_OWNER}/${knownApp.repo}`,
             category: knownApp.category,
+            betaVersion: availableBetaVersion(beta?.tag_name, release?.tag_name),
             latestVersion: release?.tag_name,
             latestReleaseDate: release?.published_at,
             downloadUrl: exeAsset?.browser_download_url,
@@ -191,15 +210,13 @@ export async function checkForAppUpdate(repo: string, currentVersion: string): P
     }
 
     const latestVersion = release.tag_name
-    const hasUpdate = latestVersion !== currentVersion
+    const hasUpdate = shouldProposeUpdate(currentVersion, latestVersion)
 
     if (!hasUpdate) {
       return { hasUpdate: false }
     }
 
-    const exeAsset = release.assets.find(asset =>
-      asset.name.endsWith('.exe') && !asset.name.includes('blockmap')
-    )
+    const exeAsset = installerAsset(release)
 
     return {
       hasUpdate: true,
@@ -212,4 +229,3 @@ export async function checkForAppUpdate(repo: string, currentVersion: string): P
     return { hasUpdate: false }
   }
 }
-

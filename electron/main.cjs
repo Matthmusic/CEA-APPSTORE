@@ -69,6 +69,13 @@ function initializeAutoUpdater() {
   ;({ autoUpdater } = require('electron-updater'))
 
   autoUpdater.autoDownload = false
+  // CEA: experimental releases are installed manually through Appstore.
+  autoUpdater.allowPrerelease = false;
+  autoUpdater.allowDowngrade = false;
+  if (/^\d+\.\d+\.\d+-/.test(app.getVersion())) {
+    autoUpdater.checkForUpdates = async () => null;
+    autoUpdater.checkForUpdatesAndNotify = async () => null;
+  }
   autoUpdater.autoInstallOnAppQuit = true
 
   autoUpdater.on('update-available', (info) => {
@@ -712,10 +719,14 @@ ipcMain.handle('install-app', async (event, exePath) => {
         fs.accessSync(exePath, fs.constants.R_OK)
 
         // Launch installer automatically
-        spawn(exePath, [], {
-          detached: true,
-          stdio: 'ignore',
-        }).unref()
+        await new Promise((resolve, reject) => {
+          const installer = spawn(exePath, [], { stdio: 'ignore' })
+          installer.once('error', reject)
+          installer.once('exit', (code) => {
+            if (code === 0 || code === 3010) resolve()
+            else reject(new Error('Installation annulée ou échouée (code ' + code + ').'))
+          })
+        })
 
         return { success: true }
       } catch (error) {
@@ -725,9 +736,8 @@ ipcMain.handle('install-app', async (event, exePath) => {
         // Si c'est une erreur EBUSY, attendre un peu plus avant de réessayer
         if (error.code === 'EBUSY' && attempt < maxRetries - 1) {
           await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)))
-        } else if (attempt < maxRetries - 1) {
-          // Attendre avant de réessayer pour d'autres erreurs
-          await new Promise(resolve => setTimeout(resolve, 500))
+        } else {
+          break
         }
       }
     }
