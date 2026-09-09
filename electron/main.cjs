@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, nativeTheme, shell, session } = require('electron')
+const { app, BrowserWindow, ipcMain, nativeTheme, shell, session, screen } = require('electron')
 const path = require('path')
 const fs = require('fs')
 const { spawn } = require('child_process')
@@ -31,11 +31,16 @@ const appNameMapping = {
 // ============================================
 
 function createWindow() {
+  const { workArea } = screen.getDisplayNearestPoint(screen.getCursorScreenPoint())
+  const width = Math.min(1700, workArea.width)
+  const height = Math.min(1100, workArea.height)
   mainWindow = new BrowserWindow({
-    width: 1440,
-    height: 1080,
-    minWidth: 900,
-    minHeight: 600,
+    width,
+    height,
+    x: workArea.x + Math.round((workArea.width - width) / 2),
+    y: workArea.y + Math.round((workArea.height - height) / 2),
+    minWidth: Math.min(900, width),
+    minHeight: Math.min(600, height),
     title: 'CEA AppStore',
     frame: false, // Custom title bar
     backgroundColor: '#0a0a0a',
