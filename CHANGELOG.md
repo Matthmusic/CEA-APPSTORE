@@ -5,6 +5,11 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [0.3.2] - 2026-11-27
+
+### Added
+- nodial (successeur de TONTONKAD) ajouté au catalogue : dépôt `nodial_release`, fiche `cea-app.json` ; ses bêtas sont proposées sur le canal Bêta.
+
 ## [0.0.9] - 2026-01-06
 
 ### Added

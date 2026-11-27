@@ -26,6 +26,7 @@ const REPOS_TO_SCAN = [
   'IMGFLEX',
   'RACKULA',
   'NEXUS',
+  'nodial_release', // nodial (successeur de TONTONKAD) : dépôt public des installeurs et de la fiche cea-app.json
 ]
 
 // Fallback: Liste des apps connues (si pas de cea-app.json)

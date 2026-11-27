@@ -28,6 +28,7 @@ export const APP_COLORS: Record<string, { from: string; to: string }> = {
   imgflex: { from: '#F97316', to: '#C2410C' },      // Orange-rouge
   rackula: { from: '#6366F1', to: '#4338CA' },      // Indigo
   nexus: { from: '#14B8A6', to: '#0F766E' },        // Teal
+  nodial: { from: '#FF6505', to: '#B84D12' },       // Cuivre nodial
 }
 
 export function getAppColor(appId: string): { from: string; to: string } {

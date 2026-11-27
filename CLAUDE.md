@@ -47,7 +47,7 @@ L'appli suit l'architecture sécurisée d'Electron avec une séparation stricte 
 
 ### Flux de données : comment les applis arrivent dans le catalogue
 
-1. `githubService.ts` — Utilise `@octokit/rest` pour interroger l'API GitHub sur les releases sous l'orga `@Matthmusic`. Liste des repos hardcodée : `ListX`, `To-DoX`, `AUTONUM`, `RENDEXPRESS`, `TONTONKAD`, `CaneFlow`, `IMGFLEX`. Un token GitHub (stocké en `localStorage`) évite le rate limiting.
+1. `githubService.ts` — Utilise `@octokit/rest` pour interroger l'API GitHub sur les releases sous l'orga `@Matthmusic`. Liste des repos hardcodée (`REPOS_TO_SCAN`) : `ListX`, `To-DoX`, `AUTONUM`, `RENDEXPRESS`, `TONTONKAD`, `CaneFlow`, `IMGFLEX`, `RACKULA`, `NEXUS`, `nodial_release`. Un token GitHub (stocké en `localStorage`) évite le rate limiting.
 2. Pour chaque repo, il essaie de récupérer un manifeste `cea-app.json` à la racine du repo (essayé sur `main`, puis `master`). Ce manifeste (`cea-app-template.json` documente le schéma) fournit les métadonnées, la config de détection, les URLs de logos, etc. Si aucun manifeste n'existe, un fallback hardcodé dans `KNOWN_APPS` est utilisé.
 3. `ceaAppService.ts` parse le manifeste en type `AppInfo`.
 4. Dans le renderer, `AppStoreContext.tsx` appelle `window.electronAPI.getInstalledApps()` pour croiser le catalogue avec ce qui est réellement installé, produisant `AppWithStatus[]` utilisé partout dans l'UI.
